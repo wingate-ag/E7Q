@@ -43,6 +43,16 @@ class Execution:
     proof: tuple[dict[str, object], ...]
 
 
+@dataclass(frozen=True)
+class Comparison:
+    criterion: str
+    equivalent: bool
+    tolerance: float
+    maximum_error: float
+    global_phase: complex | None
+    proof: tuple[dict[str, object], ...]
+
+
 _ONE_QUBIT = {
     "X": np.array([[0, 1], [1, 0]], complex),
     "Y": np.array([[0, -1j], [1j, 0]], complex),
@@ -209,6 +219,103 @@ def run(program: Program) -> Execution:
         "outcomes": counts,
     })
     return Execution(program, state, probabilities, counts, tuple(proof))
+
+
+def circuit_unitary(program: Program) -> np.ndarray:
+    """Return the unitary implemented before a program's terminal measurement."""
+    dimension = 2**program.qubits
+    columns: list[np.ndarray] = []
+    for basis in range(dimension):
+        state = np.zeros(dimension, complex)
+        state[basis] = 1
+        for operation in program.operations:
+            if operation.gate == "MEASURE":
+                continue
+            if operation.gate in _ONE_QUBIT:
+                state = _apply_one(
+                    state, _ONE_QUBIT[operation.gate],
+                    operation.qubits[0], program.qubits,
+                )
+            else:
+                state = _apply_two(
+                    state, operation.gate, *operation.qubits, program.qubits
+                )
+        columns.append(state)
+    return np.column_stack(columns)
+
+
+def compare(
+    first: Program,
+    second: Program,
+    criterion: str = "global-phase",
+    tolerance: float = 1e-12,
+) -> Comparison:
+    """Compare circuit semantics under an explicitly declared criterion."""
+    criteria = {"exact", "global-phase", "measurement", "tolerance"}
+    if criterion not in criteria:
+        raise E7QError(f"unknown equivalence criterion: {criterion}")
+    if tolerance <= 0:
+        raise E7QError("comparison tolerance must be positive")
+    if first.qubits != second.qubits:
+        raise E7QError("circuits must have the same number of qubits")
+
+    left = circuit_unitary(first)
+    right = circuit_unitary(second)
+    phase: complex | None = None
+    if criterion == "measurement":
+        error = float(np.max(np.abs(np.abs(left) ** 2 - np.abs(right) ** 2)))
+    elif criterion == "global-phase":
+        overlap = np.vdot(left.reshape(-1), right.reshape(-1))
+        if abs(overlap) > tolerance:
+            phase = overlap / abs(overlap)
+        adjusted = right / phase if phase is not None else right
+        error = float(np.max(np.abs(left - adjusted)))
+    else:
+        error = float(np.max(np.abs(left - right)))
+
+    threshold = tolerance if criterion != "exact" else 0.0
+    equivalent = error <= threshold
+    proof = (
+        {
+            "step": 0,
+            "kind": "compare",
+            "left": first.name,
+            "right": second.name,
+            "criterion": criterion,
+            "qubits": first.qubits,
+        },
+        {
+            "step": 1,
+            "kind": "equivalence",
+            "equivalent": equivalent,
+            "maximum_error": error,
+            "tolerance": threshold,
+            "global_phase": (
+                {"real": float(phase.real), "imag": float(phase.imag)}
+                if phase is not None else None
+            ),
+        },
+    )
+    return Comparison(criterion, equivalent, threshold, error, phase, proof)
+
+
+def comparison_result(comparison: Comparison) -> dict[str, object]:
+    """Convert a comparison into a JSON-safe Proof-of-Path result."""
+    return {
+        "status": "PASS" if comparison.equivalent else "FAIL",
+        "criterion": comparison.criterion,
+        "equivalent": comparison.equivalent,
+        "maximum_error": comparison.maximum_error,
+        "tolerance": comparison.tolerance,
+        "global_phase": (
+            {
+                "real": float(comparison.global_phase.real),
+                "imag": float(comparison.global_phase.imag),
+            }
+            if comparison.global_phase is not None else None
+        ),
+        "proof": list(comparison.proof),
+    }
 
 
 def verify(execution: Execution, tolerance: float = 1e-12) -> dict[str, object]:
