@@ -2,26 +2,32 @@
 
 ## v0.1 — Minimum Executable Language
 
-- grammar and semantic model;
-- qubits, classical bits, X/Y/Z/H/S/T/CX/CZ/SWAP, and measurement;
-- state-vector simulation;
-- invariant declarations and checks;
-- executable parser, simulator, verifier, and CLI;
-- OpenQASM export;
-- JSON Proof-of-Path reports;
-- Bell-state reference tests.
+- [x] parser, state-vector simulator, verifier, CLI, and CI;
+- [x] core gates, terminal measurement, invariants, OpenQASM export;
+- [x] JSON Proof-of-Path and Bell-state reference test.
 
-## v0.2 — Composition and verification
+## v0.2 — Circuit equivalence
 
-- [x] circuit comparison;
 - [x] exact, global-phase, computational-basis measurement, and tolerance equivalence;
-- [x] comparison Proof-of-Path reports;
-- [ ] reusable paths and stronger properties;
-- [ ] density matrices and basic noise channels;
-- [ ] partial measurement;
-- [ ] first-failing-transformation diagnostics;
-- [ ] OpenQASM import and round-trip validation.
+- [x] comparison CLI and Proof-of-Path reports;
+- [x] optimisation examples and regression tests.
 
-## v0.3 — Backend bridge
+## v0.3 — Dynamic algorithms
 
-IR adapters, topology-aware mapping, capability profiles, compilation traces, and noise-aware evidence.
+- [x] partial and mid-circuit measurement;
+- [x] classical-bit feed-forward;
+- [x] quantum teleportation reference program;
+- [x] Deutsch–Jozsa balanced-oracle reference program;
+- [x] aggregate dynamic Proof-of-Path tracing;
+- [x] OpenQASM 3 export for dynamic operations;
+- [ ] channel-level equivalence for non-unitary programs.
+
+## v0.4 — Composition and diagnostics
+
+Reusable paths, stronger properties, first-failing-transformation
+diagnostics, OpenQASM import and round-trip validation.
+
+## v0.5 — Noise and backend bridge
+
+Density matrices, basic noise channels, IR adapters, topology-aware mapping,
+capability profiles, compilation traces, and noise-aware evidence.
