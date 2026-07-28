@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+message: "If you use E7Q, please cite this software and its specification."
+title: "E7Q: An E7G-T-based Quantum Programming and Verification Language"
+type: software
+authors:
+  - family-names: Wingate
+    given-names: Alexander Gregory
+license: Apache-2.0
+repository-code: "https://github.com/wingate-ag/E7Q"
+version: 0.1.0-dev
+date-released: 2026-07-28
