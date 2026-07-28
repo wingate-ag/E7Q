@@ -45,3 +45,13 @@
 - [x] computational-basis measurement-behaviour comparison for channels;
 - [x] superoperator Proof-of-Path evidence;
 - [x] explicit rejection of incompatible or dynamic programs.
+
+## v0.7 — Topology-aware compilation
+
+- [x] backend-neutral linear, ring, and all-to-all coupling maps;
+- [x] shortest-path routing for non-adjacent two-qubit gates;
+- [x] semantics-preserving SWAP insertion with restored logical layout;
+- [x] native-gate capability validation;
+- [x] compilation Proof-of-Path with routing and overhead evidence;
+- [ ] vendor IR adapters and credential-dependent hardware submission;
+- [ ] calibrated cost models and hardware-derived fidelity estimates.

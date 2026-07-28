@@ -1,6 +1,6 @@
 # E7Q Language Specification
 
-**Version:** 0.6.0-dev
+**Version:** 0.7.0-dev
 **Status:** experimental draft
 **Documentation licence:** CC-BY-SA-4.0
 
@@ -89,6 +89,14 @@ For noisy execution, the report distinguishes `transform`, `channel`, and
 capability profile declares required features and preserves the boundary
 between reference simulation and hardware-specific compilation.
 
+Topology compilation accepts an explicit undirected coupling graph and native
+gate set. A non-adjacent two-qubit operation is routed along a shortest path by
+inserting a forward SWAP chain, applying the operation, and reversing the
+chain. Restoring the logical layout preserves later measurement and classical
+control semantics. The compilation report records the physical path, inserted
+SWAP count, capability assumptions, and boundary between compilation evidence
+and physical execution.
+
 ## 9. Conformance
 
 A v0.5 implementation must retain Bell and equivalence behaviour, execute the
@@ -99,3 +107,6 @@ references, and reject dynamic programs from unitary comparison.
 It must additionally preserve density-matrix trace under all supported
 channels, expose noise-aware evidence and capability requirements, and reject
 noise on the state-vector backend.
+Topology conformance requires rejection of disconnected coupling graphs and
+unsupported native gates, semantics preservation after routing, and an
+auditable compilation trace. It does not imply hardware fidelity.
