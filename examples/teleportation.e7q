@@ -1,0 +1,26 @@
+context TeleportOne {
+  shots: 4096
+  backend: statevector
+  seed: 23
+}
+
+qubits q[3]
+bits c[3]
+
+invariant normalized
+invariant outcomes in {001, 011, 101, 111}
+
+path Teleport {
+  X q[0]
+  H q[1]
+  CX q[1], q[2]
+  CX q[0], q[1]
+  H q[0]
+  measure q[0] -> c[0]
+  measure q[1] -> c[1]
+  if c[1] == 1 X q[2]
+  if c[0] == 1 Z q[2]
+  measure q[2] -> c[2]
+}
+
+verify Teleport
