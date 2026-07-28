@@ -1,0 +1,19 @@
+context BellExperiment {
+  shots: 1000
+  backend: statevector
+  seed: 7
+}
+
+qubits q[2]
+bits c[2]
+
+invariant normalized
+invariant outcomes in {00, 11}
+
+path CreateBellPair {
+  H q[0]
+  CX q[0], q[1]
+  measure q -> c
+}
+
+verify CreateBellPair
