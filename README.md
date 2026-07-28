@@ -12,9 +12,11 @@ compilation.
 
 ## Status
 
-Pre-alpha. Milestones 1 and 2 provide the executable language and circuit
-equivalence. Milestone 3 adds partial measurement, classical feed-forward,
-quantum teleportation, and Deutsch–Jozsa reference programs.
+Pre-alpha. Milestones 1–3 provide the executable language, circuit
+equivalence, partial measurement, classical feed-forward, quantum
+teleportation, and Deutsch–Jozsa reference programs. Milestone 4 adds
+reusable paths, executable assertions, first-failure diagnostics, and
+OpenQASM subset round trips.
 
 ## Quick examples
 
@@ -22,6 +24,7 @@ quantum teleportation, and Deutsch–Jozsa reference programs.
 e7q verify examples/bell.e7q --proof bell.proof.json
 e7q verify examples/teleportation.e7q --proof teleportation.proof.json
 e7q verify examples/deutsch-jozsa-balanced.e7q
+e7q verify examples/diagnostic-composition.e7q --proof diagnostic.proof.json
 ```
 
 Compare unitary circuits under an explicit criterion:
@@ -39,8 +42,8 @@ tolerance-based equality. Dynamic paths containing mid-circuit measurement
 or classical control are deliberately excluded from unitary comparison.
 
 See the [quickstart](docs/QUICKSTART.md), [Milestone 3 guide](docs/MILESTONE_3.md),
-[language specification](docs/E7Q_Language_Specification.md), and
-[roadmap](ROADMAP.md).
+[Milestone 4 guide](docs/MILESTONE_4.md),
+[language specification](docs/E7Q_Language_Specification.md), and [roadmap](ROADMAP.md).
 
 ## Relationship to E7G-T
 

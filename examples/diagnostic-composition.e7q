@@ -1,0 +1,22 @@
+context DiagnosticComposition {
+    backend: statevector
+    shots: 256
+    seed: 7
+}
+
+qubits q[1]
+bits c[1]
+
+invariant normalized
+
+path PrepareAndMeasure {
+    X q[0]
+    measure q[0] -> c[0]
+}
+
+path DiagnosticRun {
+    use PrepareAndMeasure
+    assert c[0] == 1
+}
+
+verify DiagnosticRun

@@ -1,7 +1,7 @@
 # E7Q Language Specification
 
-**Version:** 0.3.0-dev  
-**Status:** experimental draft  
+**Version:** 0.4.0-dev
+**Status:** experimental draft
 **Documentation licence:** CC-BY-SA-4.0
 
 ## 1. Purpose
@@ -14,9 +14,9 @@ modelling and accountability vocabulary.
 ## 2. Program model
 
 A program contains a context, one quantum register, one classical register,
-invariants, a named path, and a verification target. A path is an ordered
-sequence of unitary transformations, measurements, and classically
-conditioned transformations.
+invariants, one or more named paths, and a verification target. A path is an
+ordered sequence of unitary transformations, measurements, classically
+conditioned transformations, assertions, and reusable-path references.
 
 ## 3. Core types and context
 
@@ -35,6 +35,12 @@ collapses one qubit, stores the result, and permits subsequent operations.
 
 `if c[j] == b G q[i]` applies the one-qubit gate `G` only when classical bit
 `c[j]` equals `b`, where `b` is zero or one.
+
+`use PathName` expands another declared path at the point of use. References
+must exist and must not be recursive.
+
+`assert c[j] == b` checks the classical value for every shot. It contributes a
+verification check and records its failed-shot count and Proof-of-Path step.
 
 ## 5. Invariants
 
@@ -60,13 +66,15 @@ profiles may compare non-unitary dynamic programs.
 ## 8. Proof-of-Path
 
 A report records initialization, ordered transformations, projections,
-classical conditions, executed and skipped branch counts, final outcomes,
-and invariant results. This is evidence for the declared execution, not proof
-of a new physical theory.
+classical conditions, assertions, executed and skipped branch counts, final
+outcomes, and invariant results. When an assertion fails, `first_failure`
+identifies its step and failed-shot count. This is evidence for the declared
+execution, not proof of a new physical theory.
 
 ## 9. Conformance
 
-A v0.3 implementation must retain Bell and equivalence behaviour, execute the
+A v0.4 implementation must retain Bell and equivalence behaviour, execute the
 reference teleportation and Deutsch–Jozsa programs, export their supported
-operations to OpenQASM 3, reject invalid references, and reject dynamic
-programs from unitary comparison.
+operations to OpenQASM 3, compose non-recursive paths, diagnose failed
+assertions, round-trip the supported OpenQASM subset, reject invalid
+references, and reject dynamic programs from unitary comparison.

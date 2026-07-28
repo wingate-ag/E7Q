@@ -22,6 +22,7 @@ class Operation:
     bits: tuple[int, ...] = ()
     condition: tuple[int, int] | None = None
     full_register: bool = False
+    label: str | None = None
 
 
 @dataclass(frozen=True)
@@ -36,6 +37,7 @@ class Program:
     operations: tuple[Operation, ...]
     allowed_outcomes: frozenset[str] | None
     require_normalized: bool
+    subpaths: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -105,10 +107,13 @@ def parse(source: str) -> Program:
     if qubits < 1 or bits < 1:
         raise E7QError("register sizes must be positive")
 
-    path_match = _required(r"path\s+(\w+)\s*\{(.*?)\}", text, "path")
-    path, body = path_match.groups()
     verify_match = _required(r"verify\s+(\w+)", text, "verify declaration")
-    if verify_match.group(1) != path:
+    path_blocks = {
+        match.group(1): match.group(2)
+        for match in re.finditer(r"path\s+(\w+)\s*\{(.*?)\}", text, re.S)
+    }
+    path = verify_match.group(1)
+    if path not in path_blocks:
         raise E7QError("verify target does not match declared path")
 
     qref = rf"{re.escape(qname)}\[(\d+)\]"
@@ -122,45 +127,72 @@ def parse(source: str) -> Program:
     condition_pattern = re.compile(
         rf"if\s+{cref}\s*==\s*([01])\s+(X|Y|Z|H|S|T)\s+{qref}\Z"
     )
+    assert_pattern = re.compile(rf"assert\s+{cref}\s*==\s*([01])\Z")
+    use_pattern = re.compile(r"use\s+(\w+)\Z")
 
     operations: list[Operation] = []
+    used: list[str] = []
     full_measured = False
-    for raw_statement in body.splitlines():
-        statement = raw_statement.strip()
-        if not statement:
-            continue
-        if full_measured:
-            raise E7QError("full-register measurement must be the final operation")
-        match = full_pattern.fullmatch(statement)
-        if match:
-            if bits < qubits:
-                raise E7QError("full-register measurement requires bits >= qubits")
-            operations.append(Operation("MEASURE", full_register=True))
-            full_measured = True
-            continue
-        match = partial_pattern.fullmatch(statement)
-        if match:
-            qindex, bindex = map(int, match.groups())
-            _validate_indices(qindex, bindex, qubits, bits, "measurement")
-            operations.append(Operation("MEASURE", (qindex,), (bindex,)))
-            continue
-        match = condition_pattern.fullmatch(statement)
-        if match:
-            bindex, value, gate, qindex = match.groups()
-            bindex, value, qindex = int(bindex), int(value), int(qindex)
-            _validate_indices(qindex, bindex, qubits, bits, "condition")
-            operations.append(Operation(gate, (qindex,), condition=(bindex, value)))
-            continue
-        match = two_pattern.fullmatch(statement) or one_pattern.fullmatch(statement)
-        if not match:
-            raise E7QError(f"invalid path statement: {statement}")
-        gate = match.group(1)
-        indices = tuple(int(value) for value in match.groups()[1:])
-        if any(index >= qubits for index in indices):
-            raise E7QError(f"{gate} qubit index out of range")
-        if len(indices) == 2 and indices[0] == indices[1]:
-            raise E7QError(f"{gate} requires distinct qubits")
-        operations.append(Operation(gate, indices))
+
+    def append_body(body: str, stack: tuple[str, ...]) -> None:
+        nonlocal full_measured
+        for raw_statement in body.splitlines():
+            statement = raw_statement.strip()
+            if not statement:
+                continue
+            match = use_pattern.fullmatch(statement)
+            if match:
+                target = match.group(1)
+                if target not in path_blocks:
+                    raise E7QError(f"unknown reusable path: {target}")
+                if target in stack:
+                    raise E7QError(f"recursive reusable path: {target}")
+                used.append(target)
+                append_body(path_blocks[target], stack + (target,))
+                continue
+            if full_measured:
+                raise E7QError("full-register measurement must be the final operation")
+            match = assert_pattern.fullmatch(statement)
+            if match:
+                bindex, value = map(int, match.groups())
+                if bindex >= bits:
+                    raise E7QError("assertion bit index out of range")
+                operations.append(
+                    Operation("ASSERT", bits=(bindex,), condition=(bindex, value),
+                              label=statement)
+                )
+                continue
+            match = full_pattern.fullmatch(statement)
+            if match:
+                if bits < qubits:
+                    raise E7QError("full-register measurement requires bits >= qubits")
+                operations.append(Operation("MEASURE", full_register=True))
+                full_measured = True
+                continue
+            match = partial_pattern.fullmatch(statement)
+            if match:
+                qindex, bindex = map(int, match.groups())
+                _validate_indices(qindex, bindex, qubits, bits, "measurement")
+                operations.append(Operation("MEASURE", (qindex,), (bindex,)))
+                continue
+            match = condition_pattern.fullmatch(statement)
+            if match:
+                bindex, value, gate, qindex = match.groups()
+                bindex, value, qindex = int(bindex), int(value), int(qindex)
+                _validate_indices(qindex, bindex, qubits, bits, "condition")
+                operations.append(Operation(gate, (qindex,), condition=(bindex, value)))
+                continue
+            match = two_pattern.fullmatch(statement) or one_pattern.fullmatch(statement)
+            if not match:
+                raise E7QError(f"invalid path statement: {statement}")
+            gate = match.group(1)
+            indices = tuple(int(value) for value in match.groups()[1:])
+            if any(index >= qubits for index in indices):
+                raise E7QError(f"{gate} qubit index out of range")
+            if len(indices) == 2 and indices[0] == indices[1]:
+                raise E7QError(f"{gate} requires distinct qubits")
+            operations.append(Operation(gate, indices))
+    append_body(path_blocks[path], (path,))
     if not any(operation.gate == "MEASURE" for operation in operations):
         raise E7QError("path must contain measurement")
 
@@ -173,7 +205,7 @@ def parse(source: str) -> Program:
             raise E7QError("outcome invariants must be classical-register-width bit strings")
     return Program(
         context.group(1), shots, backend, seed, qubits, bits, path,
-        tuple(operations), allowed, require_normalized,
+        tuple(operations), allowed, require_normalized, tuple(used),
     )
 
 
@@ -243,7 +275,8 @@ def run(program: Program) -> Execution:
     rng = np.random.default_rng(program.seed)
     counts: dict[str, int] = {}
     stats = [
-        {"executed": 0, "skipped": 0, "outcomes": {"0": 0, "1": 0}}
+        {"executed": 0, "skipped": 0, "failed": 0,
+         "outcomes": {"0": 0, "1": 0}}
         for _ in program.operations
     ]
     final_state = _initial_state(program)
@@ -251,6 +284,12 @@ def run(program: Program) -> Execution:
         state = _initial_state(program)
         classical = [0] * program.bits
         for index, operation in enumerate(program.operations):
+            if operation.gate == "ASSERT":
+                stats[index]["executed"] += 1
+                bit, value = operation.condition
+                if classical[bit] != value:
+                    stats[index]["failed"] += 1
+                continue
             if operation.condition is not None:
                 bit, value = operation.condition
                 if classical[bit] != value:
@@ -290,7 +329,13 @@ def run(program: Program) -> Execution:
         "step": 0, "kind": "initialize", "shots": program.shots, "state_norm": 1.0
     }]
     for operation, stat in zip(program.operations, stats):
-        if operation.gate == "MEASURE":
+        if operation.gate == "ASSERT":
+            item = {
+                "step": len(proof), "kind": "assert",
+                "assertion": operation.label, "executed": stat["executed"],
+                "failed": stat["failed"], "passed": stat["failed"] == 0,
+            }
+        elif operation.gate == "MEASURE":
             item = {
                 "step": len(proof), "kind": "project", "operator": "measure",
                 "qubits": list(operation.qubits), "bits": list(operation.bits),
@@ -324,6 +369,8 @@ def _run_unitary(program: Program) -> Execution:
         {"step": 0, "kind": "initialize", "state_norm": 1.0}
     ]
     for operation in program.operations:
+        if operation.gate == "ASSERT":
+            raise E7QError("assertions require prior dynamic measurement")
         if operation.gate == "MEASURE":
             continue
         if operation.gate in _ONE_QUBIT:
@@ -368,6 +415,8 @@ def circuit_unitary(program: Program) -> np.ndarray:
         state = np.zeros(dimension, complex)
         state[basis] = 1
         for operation in program.operations:
+            if operation.gate == "ASSERT":
+                raise E7QError("assertions are not unitary operations")
             if operation.gate == "MEASURE":
                 continue
             if operation.gate in _ONE_QUBIT:
@@ -449,10 +498,28 @@ def verify(execution: Execution, tolerance: float = 1e-12) -> dict[str, object]:
             "allowed": sorted(execution.program.allowed_outcomes),
             "observed": sorted(observed),
         })
+    failed_step = next(
+        (step for step in execution.proof
+         if step.get("kind") == "assert" and not step.get("passed", True)),
+        None,
+    )
+    for step in execution.proof:
+        if step.get("kind") == "assert":
+            checks.append({
+                "name": str(step["assertion"]),
+                "passed": bool(step["passed"]),
+                "failed_shots": int(step["failed"]),
+                "step": int(step["step"]),
+            })
     return {
         "status": "PASS" if all(check["passed"] for check in checks) else "FAIL",
         "checks": checks, "probabilities": execution.probabilities,
         "counts": execution.counts, "proof": list(execution.proof),
+        "first_failure": (
+            {"step": failed_step["step"], "assertion": failed_step["assertion"],
+             "failed_shots": failed_step["failed"]}
+            if failed_step else None
+        ),
     }
 
 
@@ -467,6 +534,10 @@ def openqasm(program: Program) -> str:
     ]
     names = {"CX": "cx", "CZ": "cz", "SWAP": "swap"}
     for operation in program.operations:
+        if operation.gate == "ASSERT":
+            bit, value = operation.condition
+            lines.append(f"// e7q-assert c[{bit}] == {value}")
+            continue
         if operation.gate == "MEASURE":
             if operation.full_register:
                 lines.append("c = measure q;")
@@ -483,6 +554,59 @@ def openqasm(program: Program) -> str:
             statement = f"if (c[{bit}] == {value}) {statement}"
         lines.append(statement)
     return "\n".join(lines) + "\n"
+
+
+def from_openqasm(source: str, *, name: str = "ImportedCircuit",
+                  shots: int = 1024, seed: int | None = None) -> Program:
+    """Import the OpenQASM 3 subset emitted by :func:`openqasm`."""
+    qmatch = _required(r"qubit\[(\d+)\]\s+q\s*;", source, "OpenQASM qubits")
+    bmatch = _required(r"bit\[(\d+)\]\s+c\s*;", source, "OpenQASM bits")
+    qubits, bits = int(qmatch.group(1)), int(bmatch.group(1))
+    operations: list[Operation] = []
+    one = re.compile(r"(x|y|z|h|s|t)\s+q\[(\d+)\]\s*;")
+    two = re.compile(r"(cx|cz|swap)\s+q\[(\d+)\]\s*,\s*q\[(\d+)\]\s*;")
+    partial = re.compile(r"c\[(\d+)\]\s*=\s*measure\s+q\[(\d+)\]\s*;")
+    conditional = re.compile(
+        r"if\s*\(c\[(\d+)\]\s*==\s*([01])\)\s*"
+        r"(x|y|z|h|s|t)\s+q\[(\d+)\]\s*;"
+    )
+    assertion = re.compile(r"//\s*e7q-assert\s+c\[(\d+)\]\s*==\s*([01])")
+    for raw in source.splitlines():
+        line = raw.strip()
+        match = assertion.fullmatch(line)
+        if match:
+            bit, value = map(int, match.groups())
+            operations.append(Operation(
+                "ASSERT", bits=(bit,), condition=(bit, value),
+                label=f"assert c[{bit}] == {value}",
+            ))
+            continue
+        match = conditional.fullmatch(line)
+        if match:
+            bit, value, gate, target = match.groups()
+            operations.append(Operation(
+                gate.upper(), (int(target),),
+                condition=(int(bit), int(value)),
+            ))
+            continue
+        match = partial.fullmatch(line)
+        if match:
+            bit, target = map(int, match.groups())
+            operations.append(Operation("MEASURE", (target,), (bit,)))
+            continue
+        if re.fullmatch(r"c\s*=\s*measure\s+q\s*;", line):
+            operations.append(Operation("MEASURE", full_register=True))
+            continue
+        match = two.fullmatch(line) or one.fullmatch(line)
+        if match:
+            operations.append(Operation(
+                match.group(1).upper(),
+                tuple(int(value) for value in match.groups()[1:]),
+            ))
+    if not any(operation.gate == "MEASURE" for operation in operations):
+        raise E7QError("OpenQASM program must contain measurement")
+    return Program(name, shots, "statevector", seed, qubits, bits, name,
+                   tuple(operations), None, True)
 
 
 def load(path: str | Path) -> Program:
