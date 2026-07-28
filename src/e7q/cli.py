@@ -7,7 +7,9 @@ import json
 from pathlib import Path
 import sys
 
-from .language import E7QError, load, openqasm, proof_json, run, verify
+from .language import (
+    E7QError, compare, comparison_result, load, openqasm, proof_json, run, verify,
+)
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -21,12 +23,36 @@ def _parser() -> argparse.ArgumentParser:
     export.add_argument("source")
     export.add_argument("--format", choices=["openqasm"], default="openqasm")
     export.add_argument("-o", "--output", type=Path)
+    compare_command = commands.add_parser("compare")
+    compare_command.add_argument("first")
+    compare_command.add_argument("second")
+    compare_command.add_argument(
+        "--criterion",
+        choices=["exact", "global-phase", "measurement", "tolerance"],
+        default="global-phase",
+    )
+    compare_command.add_argument("--tolerance", type=float, default=1e-12)
+    compare_command.add_argument("--proof", type=Path)
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     try:
+        if args.command == "compare":
+            comparison = compare(
+                load(args.first), load(args.second), args.criterion, args.tolerance
+            )
+            result = comparison_result(comparison)
+            print(
+                f"{result['status']}  equivalent under "
+                f"{result['criterion']} criterion"
+            )
+            print(f"Maximum error: {result['maximum_error']:.3e}")
+            if args.proof:
+                args.proof.write_text(proof_json(result), encoding="utf-8")
+                print(f"Proof-of-Path: {args.proof}")
+            return 0 if comparison.equivalent else 1
         program = load(args.source)
         if args.command == "export":
             content = openqasm(program)

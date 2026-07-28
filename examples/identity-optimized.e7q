@@ -1,0 +1,17 @@
+context IdentityOptimized {
+  shots: 1000
+  backend: statevector
+}
+
+qubits q[1]
+bits c[1]
+
+invariant normalized
+
+path CancelledPair {
+  X q[0]
+  X q[0]
+  measure q -> c
+}
+
+verify CancelledPair
