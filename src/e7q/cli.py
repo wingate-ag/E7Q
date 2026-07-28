@@ -29,7 +29,10 @@ def _parser() -> argparse.ArgumentParser:
     compare_command.add_argument("second")
     compare_command.add_argument(
         "--criterion",
-        choices=["exact", "global-phase", "measurement", "tolerance"],
+        choices=[
+            "exact", "global-phase", "measurement", "tolerance",
+            "channel-exact", "channel-tolerance", "channel-measurement",
+        ],
         default="global-phase",
     )
     compare_command.add_argument("--tolerance", type=float, default=1e-12)

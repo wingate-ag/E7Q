@@ -19,6 +19,7 @@ reusable paths, executable assertions, first-failure diagnostics, and
 OpenQASM subset round trips.
 Milestone 5 adds a density-matrix reference backend, declared noise channels,
 noise-aware evidence, and machine-readable backend capability profiles.
+Milestone 6 adds superoperator-based equivalence for declared quantum channels.
 
 ## Quick examples
 
@@ -44,10 +45,13 @@ Supported comparison criteria are exact unitary equality, equality up to
 global phase, computational-basis measurement equivalence, and
 tolerance-based equality. Dynamic paths containing mid-circuit measurement
 or classical control are deliberately excluded from unitary comparison.
+Compatible density-matrix programs can additionally use `channel-exact`,
+`channel-tolerance`, or `channel-measurement`.
 
 See the [quickstart](docs/QUICKSTART.md), [Milestone 3 guide](docs/MILESTONE_3.md),
 [Milestone 4 guide](docs/MILESTONE_4.md),
 [Milestone 5 guide](docs/MILESTONE_5.md),
+[Milestone 6 guide](docs/MILESTONE_6.md),
 [language specification](docs/E7Q_Language_Specification.md), and [roadmap](ROADMAP.md).
 
 ## Relationship to E7G-T
