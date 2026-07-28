@@ -24,8 +24,10 @@
 
 ## v0.4 — Composition and diagnostics
 
-Reusable paths, stronger properties, first-failing-transformation
-diagnostics, OpenQASM import and round-trip validation.
+- [x] reusable path composition with recursion rejection;
+- [x] executable classical assertions;
+- [x] first-failing-step diagnostics in verification reports;
+- [x] OpenQASM 3 subset import and round-trip validation.
 
 ## v0.5 — Noise and backend bridge
 
