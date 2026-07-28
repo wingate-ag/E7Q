@@ -1,4 +1,4 @@
-(* E7Q v0.1 draft grammar *)
+(* E7Q v0.3 draft grammar *)
 program = { declaration }, verify_stmt ;
 declaration = context_decl | register_decl | invariant_decl | path_decl ;
 context_decl = "context", identifier, "{", { setting }, "}" ;
@@ -6,7 +6,10 @@ setting = identifier, ":", value ;
 register_decl = ("qubits" | "bits"), identifier, "[", integer, "]" ;
 invariant_decl = "invariant", ("normalized" | "outcomes", "in", set_literal) ;
 path_decl = "path", identifier, "{", { operation }, "}" ;
-operation = gate, reference, [",", reference] | "measure", identifier, "->", identifier ;
+operation = gate_operation | measurement | conditional_gate ;
+gate_operation = gate, reference, [",", reference] ;
+measurement = "measure", (identifier | reference), "->", (identifier | reference) ;
+conditional_gate = "if", reference, "==", bit, gate, reference ;
 verify_stmt = "verify", identifier ;
 reference = identifier, "[", integer, "]" ;
 gate = "X" | "Y" | "Z" | "H" | "S" | "T" | "CX" | "CZ" | "SWAP" ;
@@ -14,5 +17,6 @@ set_literal = "{", bitstring, {",", bitstring}, "}" ;
 value = identifier | integer | string ;
 identifier = letter, {letter | digit | "_"} ;
 integer = digit, {digit} ;
-bitstring = ("0" | "1"), {"0" | "1"} ;
+bit = "0" | "1" ;
+bitstring = bit, {bit} ;
 string = '"', { ? non-quote character ? }, '"' ;

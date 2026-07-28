@@ -1,0 +1,22 @@
+context DeutschJozsaBalanced {
+  shots: 2048
+  backend: statevector
+  seed: 31
+}
+
+qubits q[2]
+bits c[2]
+
+invariant normalized
+invariant outcomes in {10, 11}
+
+path BalancedOracle {
+  X q[1]
+  H q[0]
+  H q[1]
+  CX q[0], q[1]
+  H q[0]
+  measure q -> c
+}
+
+verify BalancedOracle
