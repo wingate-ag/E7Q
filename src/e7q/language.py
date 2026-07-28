@@ -2,13 +2,11 @@
 """Parser, state-vector executor, verifier, and exporters for E7Q v0.1."""
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 import json
 import math
 from pathlib import Path
 import re
-from typing import Iterable
-
 import numpy as np
 
 
