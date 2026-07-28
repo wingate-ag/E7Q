@@ -1,0 +1,19 @@
+context NoisyBell {
+    backend: densitymatrix
+    shots: 4096
+    seed: 19
+}
+
+qubits q[2]
+bits c[2]
+
+invariant normalized
+
+path NoisyBellPair {
+    H q[0]
+    CX q[0], q[1]
+    noise bit_flip(0.10) q[1]
+    measure q -> c
+}
+
+verify NoisyBellPair

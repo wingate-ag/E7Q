@@ -23,6 +23,7 @@ class Operation:
     condition: tuple[int, int] | None = None
     full_register: bool = False
     label: str | None = None
+    probability: float | None = None
 
 
 @dataclass(frozen=True)
@@ -68,6 +69,7 @@ _ONE_QUBIT = {
     "T": np.array([[1, 0], [0, np.exp(1j * math.pi / 4)]], complex),
 }
 _TWO_QUBIT = {"CX", "CZ", "SWAP"}
+_NOISE_CHANNELS = {"bit_flip", "phase_flip", "depolarizing"}
 
 
 def _strip_comments(source: str) -> str:
@@ -93,8 +95,8 @@ def parse(source: str) -> Program:
     if shots < 1:
         raise E7QError("shots must be positive")
     backend = settings.get("backend", "statevector")
-    if backend != "statevector":
-        raise E7QError("only the statevector backend is supported")
+    if backend not in {"statevector", "densitymatrix"}:
+        raise E7QError("backend must be statevector or densitymatrix")
     try:
         seed = int(settings["seed"]) if "seed" in settings else None
     except ValueError as exc:
@@ -129,6 +131,10 @@ def parse(source: str) -> Program:
     )
     assert_pattern = re.compile(rf"assert\s+{cref}\s*==\s*([01])\Z")
     use_pattern = re.compile(r"use\s+(\w+)\Z")
+    noise_pattern = re.compile(
+        rf"noise\s+({'|'.join(sorted(_NOISE_CHANNELS))})"
+        rf"\s*\(\s*([0-9]*\.?[0-9]+)\s*\)\s+{qref}\Z"
+    )
 
     operations: list[Operation] = []
     used: list[str] = []
@@ -160,6 +166,19 @@ def parse(source: str) -> Program:
                 operations.append(
                     Operation("ASSERT", bits=(bindex,), condition=(bindex, value),
                               label=statement)
+                )
+                continue
+            match = noise_pattern.fullmatch(statement)
+            if match:
+                channel, probability, qindex = match.groups()
+                probability, qindex = float(probability), int(qindex)
+                if not 0.0 <= probability <= 1.0:
+                    raise E7QError("noise probability must be between zero and one")
+                if qindex >= qubits:
+                    raise E7QError("noise qubit index out of range")
+                operations.append(
+                    Operation("NOISE", (qindex,), label=channel,
+                              probability=probability)
                 )
                 continue
             match = full_pattern.fullmatch(statement)
@@ -195,6 +214,18 @@ def parse(source: str) -> Program:
     append_body(path_blocks[path], (path,))
     if not any(operation.gate == "MEASURE" for operation in operations):
         raise E7QError("path must contain measurement")
+    if any(operation.gate == "NOISE" for operation in operations):
+        if backend != "densitymatrix":
+            raise E7QError("noise channels require the densitymatrix backend")
+        if any(
+            operation.condition is not None
+            or (operation.gate == "MEASURE" and not operation.full_register)
+            or operation.gate == "ASSERT"
+            for operation in operations
+        ):
+            raise E7QError(
+                "densitymatrix noise currently requires terminal full-register measurement"
+            )
 
     require_normalized = bool(re.search(r"invariant\s+normalized\b", text))
     outcomes = re.search(r"invariant\s+outcomes\s+in\s*\{([^}]+)\}", text)
@@ -269,6 +300,8 @@ def _initial_state(program: Program) -> np.ndarray:
 
 def run(program: Program) -> Execution:
     """Execute a program; dynamic paths are evaluated shot by shot."""
+    if program.backend == "densitymatrix":
+        return _run_densitymatrix(program)
     if not _is_dynamic(program):
         return _run_unitary(program)
 
@@ -363,6 +396,107 @@ def run(program: Program) -> Execution:
     return Execution(program, final_state, probabilities, counts, tuple(proof))
 
 
+def _operator_matrix(operation: Operation, size: int) -> np.ndarray:
+    """Construct a full-system unitary for the small reference backend."""
+    dimension = 2**size
+    columns: list[np.ndarray] = []
+    for basis in range(dimension):
+        state = np.zeros(dimension, complex)
+        state[basis] = 1
+        if operation.gate in _ONE_QUBIT:
+            state = _apply_one(
+                state, _ONE_QUBIT[operation.gate], operation.qubits[0], size
+            )
+        else:
+            state = _apply_two(state, operation.gate, *operation.qubits, size)
+        columns.append(state)
+    return np.column_stack(columns)
+
+
+def _noise_kraus(operation: Operation) -> tuple[np.ndarray, ...]:
+    probability = float(operation.probability)
+    identity = np.eye(2, dtype=complex)
+    if operation.label == "bit_flip":
+        return (
+            math.sqrt(1 - probability) * identity,
+            math.sqrt(probability) * _ONE_QUBIT["X"],
+        )
+    if operation.label == "phase_flip":
+        return (
+            math.sqrt(1 - probability) * identity,
+            math.sqrt(probability) * _ONE_QUBIT["Z"],
+        )
+    # Standard single-qubit depolarizing channel:
+    # (1-p)ρ + p/3 (XρX + YρY + ZρZ).
+    return (
+        math.sqrt(1 - probability) * identity,
+        math.sqrt(probability / 3) * _ONE_QUBIT["X"],
+        math.sqrt(probability / 3) * _ONE_QUBIT["Y"],
+        math.sqrt(probability / 3) * _ONE_QUBIT["Z"],
+    )
+
+
+def _embed_one(operator: np.ndarray, target: int, size: int) -> np.ndarray:
+    operation = Operation("_embedded", (target,))
+    dimension = 2**size
+    columns = []
+    for basis in range(dimension):
+        state = np.zeros(dimension, complex)
+        state[basis] = 1
+        columns.append(_apply_one(state, operator, target, size))
+    return np.column_stack(columns)
+
+
+def _run_densitymatrix(program: Program) -> Execution:
+    """Execute unitary evolution plus declared channels as a density matrix."""
+    ket = _initial_state(program)
+    density = np.outer(ket, ket.conj())
+    proof: list[dict[str, object]] = [{
+        "step": 0, "kind": "initialize", "backend": "densitymatrix",
+        "trace": 1.0, "purity": 1.0,
+    }]
+    for operation in program.operations:
+        if operation.gate == "MEASURE":
+            continue
+        if operation.gate == "NOISE":
+            updated = np.zeros_like(density)
+            for local in _noise_kraus(operation):
+                kraus = _embed_one(local, operation.qubits[0], program.qubits)
+                updated += kraus @ density @ kraus.conj().T
+            density = updated
+            kind, operator = "channel", operation.label
+        else:
+            unitary = _operator_matrix(operation, program.qubits)
+            density = unitary @ density @ unitary.conj().T
+            kind, operator = "transform", operation.gate
+        proof.append({
+            "step": len(proof), "kind": kind, "operator": operator,
+            "qubits": list(operation.qubits),
+            "probability": operation.probability,
+            "trace": float(np.trace(density).real),
+            "purity": float(np.trace(density @ density).real),
+        })
+    raw = np.real(np.diag(density))
+    raw = np.clip(raw, 0.0, 1.0)
+    raw /= raw.sum()
+    qlabels = [f"{index:0{program.qubits}b}" for index in range(len(raw))]
+    labels = [label + "0" * (program.bits - program.qubits) for label in qlabels]
+    probabilities = {
+        label: float(value) for label, value in zip(labels, raw) if value > 1e-15
+    }
+    rng = np.random.default_rng(program.seed)
+    samples = rng.choice(labels, size=program.shots, p=raw)
+    counts = {
+        label: int(np.count_nonzero(samples == label)) for label in labels
+        if np.count_nonzero(samples == label)
+    }
+    proof.append({
+        "step": len(proof), "kind": "project", "operator": "measure",
+        "shots": program.shots, "outcomes": counts,
+    })
+    return Execution(program, density, probabilities, counts, tuple(proof))
+
+
 def _run_unitary(program: Program) -> Execution:
     state = _initial_state(program)
     proof: list[dict[str, object]] = [
@@ -409,6 +543,10 @@ def circuit_unitary(program: Program) -> np.ndarray:
         raise E7QError(
             "unitary comparison does not support mid-circuit measurement or classical control"
         )
+    if program.backend != "statevector" or any(
+        operation.gate == "NOISE" for operation in program.operations
+    ):
+        raise E7QError("unitary comparison does not support noise channels")
     dimension = 2**program.qubits
     columns: list[np.ndarray] = []
     for basis in range(dimension):
@@ -489,8 +627,16 @@ def comparison_result(comparison: Comparison) -> dict[str, object]:
 def verify(execution: Execution, tolerance: float = 1e-12) -> dict[str, object]:
     checks: list[dict[str, object]] = []
     if execution.program.require_normalized:
-        norm = float(np.vdot(execution.state, execution.state).real)
-        checks.append({"name": "normalized", "passed": abs(norm - 1.0) <= tolerance})
+        if execution.program.backend == "densitymatrix":
+            norm = float(np.trace(execution.state).real)
+            checks.append({
+                "name": "trace-preserving",
+                "passed": abs(norm - 1.0) <= tolerance,
+                "trace": norm,
+            })
+        else:
+            norm = float(np.vdot(execution.state, execution.state).real)
+            checks.append({"name": "normalized", "passed": abs(norm - 1.0) <= tolerance})
     if execution.program.allowed_outcomes is not None:
         observed = {key for key, value in execution.probabilities.items() if value > tolerance}
         checks.append({
@@ -511,7 +657,7 @@ def verify(execution: Execution, tolerance: float = 1e-12) -> dict[str, object]:
                 "failed_shots": int(step["failed"]),
                 "step": int(step["step"]),
             })
-    return {
+    result = {
         "status": "PASS" if all(check["passed"] for check in checks) else "FAIL",
         "checks": checks, "probabilities": execution.probabilities,
         "counts": execution.counts, "proof": list(execution.proof),
@@ -521,6 +667,17 @@ def verify(execution: Execution, tolerance: float = 1e-12) -> dict[str, object]:
             if failed_step else None
         ),
     }
+    if execution.program.backend == "densitymatrix":
+        result["evidence"] = {
+            "backend": "densitymatrix",
+            "trace": float(np.trace(execution.state).real),
+            "purity": float(np.trace(execution.state @ execution.state).real),
+            "channels": sum(
+                operation.gate == "NOISE"
+                for operation in execution.program.operations
+            ),
+        }
+    return result
 
 
 def proof_json(result: dict[str, object]) -> str:
@@ -534,6 +691,12 @@ def openqasm(program: Program) -> str:
     ]
     names = {"CX": "cx", "CZ": "cz", "SWAP": "swap"}
     for operation in program.operations:
+        if operation.gate == "NOISE":
+            lines.append(
+                f"// e7q-noise {operation.label}({operation.probability:g}) "
+                f"q[{operation.qubits[0]}]"
+            )
+            continue
         if operation.gate == "ASSERT":
             bit, value = operation.condition
             lines.append(f"// e7q-assert c[{bit}] == {value}")
@@ -611,3 +774,31 @@ def from_openqasm(source: str, *, name: str = "ImportedCircuit",
 
 def load(path: str | Path) -> Program:
     return parse(Path(path).read_text(encoding="utf-8"))
+
+
+def backend_profile(program: Program) -> dict[str, object]:
+    """Return the declared capabilities required to execute a program."""
+    return {
+        "backend": program.backend,
+        "qubits": program.qubits,
+        "shots": program.shots,
+        "requires": {
+            "density_matrix": program.backend == "densitymatrix",
+            "mid_circuit_measurement": any(
+                operation.gate == "MEASURE" and not operation.full_register
+                for operation in program.operations
+            ),
+            "classical_control": any(
+                operation.condition is not None
+                for operation in program.operations
+                if operation.gate != "ASSERT"
+            ),
+            "noise_channels": sorted({
+                str(operation.label) for operation in program.operations
+                if operation.gate == "NOISE"
+            }),
+        },
+        "boundary": (
+            "Reference simulator profile; no physical hardware fidelity is implied."
+        ),
+    }
