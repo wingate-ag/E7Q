@@ -31,5 +31,10 @@
 
 ## v0.5 — Noise and backend bridge
 
-Density matrices, basic noise channels, IR adapters, topology-aware mapping,
-capability profiles, compilation traces, and noise-aware evidence.
+- [x] density-matrix reference backend;
+- [x] bit-flip, phase-flip, and depolarizing channels;
+- [x] trace, purity, and channel evidence in Proof-of-Path;
+- [x] backend capability profiles and an explicit simulator/hardware boundary;
+- [ ] vendor IR adapters and topology-aware mapping;
+- [ ] compilation traces for physical backends;
+- [ ] channel-level equivalence for non-unitary programs.

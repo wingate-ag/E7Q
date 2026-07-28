@@ -17,6 +17,8 @@ equivalence, partial measurement, classical feed-forward, quantum
 teleportation, and Deutsch–Jozsa reference programs. Milestone 4 adds
 reusable paths, executable assertions, first-failure diagnostics, and
 OpenQASM subset round trips.
+Milestone 5 adds a density-matrix reference backend, declared noise channels,
+noise-aware evidence, and machine-readable backend capability profiles.
 
 ## Quick examples
 
@@ -25,6 +27,8 @@ e7q verify examples/bell.e7q --proof bell.proof.json
 e7q verify examples/teleportation.e7q --proof teleportation.proof.json
 e7q verify examples/deutsch-jozsa-balanced.e7q
 e7q verify examples/diagnostic-composition.e7q --proof diagnostic.proof.json
+e7q verify examples/noisy-bell.e7q --proof noisy-bell.proof.json
+e7q capabilities examples/noisy-bell.e7q
 ```
 
 Compare unitary circuits under an explicit criterion:
@@ -43,6 +47,7 @@ or classical control are deliberately excluded from unitary comparison.
 
 See the [quickstart](docs/QUICKSTART.md), [Milestone 3 guide](docs/MILESTONE_3.md),
 [Milestone 4 guide](docs/MILESTONE_4.md),
+[Milestone 5 guide](docs/MILESTONE_5.md),
 [language specification](docs/E7Q_Language_Specification.md), and [roadmap](ROADMAP.md).
 
 ## Relationship to E7G-T

@@ -8,7 +8,8 @@ from pathlib import Path
 import sys
 
 from .language import (
-    E7QError, compare, comparison_result, load, openqasm, proof_json, run, verify,
+    E7QError, backend_profile, compare, comparison_result, load, openqasm,
+    proof_json, run, verify,
 )
 
 
@@ -33,6 +34,8 @@ def _parser() -> argparse.ArgumentParser:
     )
     compare_command.add_argument("--tolerance", type=float, default=1e-12)
     compare_command.add_argument("--proof", type=Path)
+    capabilities = commands.add_parser("capabilities")
+    capabilities.add_argument("source")
     return parser
 
 
@@ -54,6 +57,9 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"Proof-of-Path: {args.proof}")
             return 0 if comparison.equivalent else 1
         program = load(args.source)
+        if args.command == "capabilities":
+            print(json.dumps(backend_profile(program), indent=2, sort_keys=True))
+            return 0
         if args.command == "export":
             content = openqasm(program)
             if args.output:
