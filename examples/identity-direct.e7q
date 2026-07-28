@@ -1,0 +1,15 @@
+context IdentityDirect {
+  shots: 1000
+  backend: statevector
+}
+
+qubits q[1]
+bits c[1]
+
+invariant normalized
+
+path Direct {
+  measure q -> c
+}
+
+verify Direct
