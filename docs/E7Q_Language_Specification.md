@@ -1,6 +1,6 @@
 # E7Q Language Specification
 
-**Version:** 0.5.0-dev
+**Version:** 0.6.0-dev
 **Status:** experimental draft
 **Documentation licence:** CC-BY-SA-4.0
 
@@ -70,8 +70,11 @@ model does not claim fidelity to an unspecified physical device.
 The implemented profiles are exact unitary equality, equality up to global
 phase, computational-basis measurement equivalence, and tolerance equality.
 Programs containing partial measurement or classical control are not
-unitaries and must be rejected by these profiles. Future channel-level
-profiles may compare non-unitary dynamic programs.
+unitaries and must be rejected by these profiles. Compatible density-matrix
+programs additionally support exact and tolerance-based superoperator
+equality and computational-basis measurement-behaviour equality. Channel
+comparison excludes mid-circuit measurement, classical control, and
+assertions.
 
 ## 8. Proof-of-Path
 

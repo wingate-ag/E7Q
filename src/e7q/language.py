@@ -570,20 +570,67 @@ def circuit_unitary(program: Program) -> np.ndarray:
     return np.column_stack(columns)
 
 
+def channel_superoperator(program: Program) -> np.ndarray:
+    """Return the linear density-matrix map induced before terminal measurement."""
+    if program.backend != "densitymatrix":
+        raise E7QError("channel comparison requires the densitymatrix backend")
+    if _is_dynamic(program) or any(
+        operation.gate == "ASSERT" for operation in program.operations
+    ):
+        raise E7QError(
+            "channel comparison does not support mid-circuit measurement, "
+            "classical control, or assertions"
+        )
+    dimension = 2**program.qubits
+    columns: list[np.ndarray] = []
+    for row in range(dimension):
+        for column in range(dimension):
+            density = np.zeros((dimension, dimension), complex)
+            density[row, column] = 1
+            for operation in program.operations:
+                if operation.gate == "MEASURE":
+                    continue
+                if operation.gate == "NOISE":
+                    updated = np.zeros_like(density)
+                    for local in _noise_kraus(operation):
+                        kraus = _embed_one(
+                            local, operation.qubits[0], program.qubits
+                        )
+                        updated += kraus @ density @ kraus.conj().T
+                    density = updated
+                else:
+                    unitary = _operator_matrix(operation, program.qubits)
+                    density = unitary @ density @ unitary.conj().T
+            columns.append(density.reshape(-1))
+    return np.column_stack(columns)
+
+
 def compare(
     first: Program, second: Program, criterion: str = "global-phase",
     tolerance: float = 1e-12,
 ) -> Comparison:
-    criteria = {"exact", "global-phase", "measurement", "tolerance"}
+    criteria = {
+        "exact", "global-phase", "measurement", "tolerance",
+        "channel-exact", "channel-tolerance", "channel-measurement",
+    }
     if criterion not in criteria:
         raise E7QError(f"unknown equivalence criterion: {criterion}")
     if tolerance <= 0:
         raise E7QError("comparison tolerance must be positive")
     if first.qubits != second.qubits:
         raise E7QError("circuits must have the same number of qubits")
-    left, right = circuit_unitary(first), circuit_unitary(second)
+    is_channel = criterion.startswith("channel-")
+    if is_channel:
+        left = channel_superoperator(first)
+        right = channel_superoperator(second)
+    else:
+        left, right = circuit_unitary(first), circuit_unitary(second)
     phase: complex | None = None
-    if criterion == "measurement":
+    if criterion == "channel-measurement":
+        dimension = 2**first.qubits
+        diagonal_rows = [index * dimension + index for index in range(dimension)]
+        error = float(np.max(np.abs(left[diagonal_rows] - right[diagonal_rows])))
+    elif criterion == "measurement":
         error = float(np.max(np.abs(np.abs(left) ** 2 - np.abs(right) ** 2)))
     elif criterion == "global-phase":
         overlap = np.vdot(left.reshape(-1), right.reshape(-1))
@@ -593,11 +640,12 @@ def compare(
         error = float(np.max(np.abs(left - adjusted)))
     else:
         error = float(np.max(np.abs(left - right)))
-    threshold = tolerance if criterion != "exact" else 0.0
+    threshold = tolerance if criterion not in {"exact", "channel-exact"} else 0.0
     equivalent = error <= threshold
     proof = ({
         "step": 0, "kind": "compare", "left": first.name, "right": second.name,
         "criterion": criterion, "qubits": first.qubits,
+        "representation": "superoperator" if is_channel else "unitary",
     }, {
         "step": 1, "kind": "equivalence", "equivalent": equivalent,
         "maximum_error": error, "tolerance": threshold,

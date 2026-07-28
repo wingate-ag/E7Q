@@ -20,7 +20,7 @@
 - [x] Deutsch–Jozsa balanced-oracle reference program;
 - [x] aggregate dynamic Proof-of-Path tracing;
 - [x] OpenQASM 3 export for dynamic operations;
-- [ ] channel-level equivalence for non-unitary programs.
+- [x] channel-level equivalence for non-unitary programs.
 
 ## v0.4 — Composition and diagnostics
 
@@ -37,4 +37,11 @@
 - [x] backend capability profiles and an explicit simulator/hardware boundary;
 - [ ] vendor IR adapters and topology-aware mapping;
 - [ ] compilation traces for physical backends;
-- [ ] channel-level equivalence for non-unitary programs.
+- [x] channel-level equivalence for non-unitary programs.
+
+## v0.6 — Channel equivalence
+
+- [x] exact and tolerance-based density-matrix channel comparison;
+- [x] computational-basis measurement-behaviour comparison for channels;
+- [x] superoperator Proof-of-Path evidence;
+- [x] explicit rejection of incompatible or dynamic programs.
