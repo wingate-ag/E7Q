@@ -11,7 +11,8 @@ E7Q is **not** a new physical theory and does not replace Hilbert spaces, unitar
 
 ## Status
 
-Pre-alpha / specification-first. The initial milestone is **v0.1 — Minimum Executable Language**.
+Pre-alpha. **v0.1 — Minimum Executable Language** is complete. Development
+now targets circuit equivalence and comparison.
 
 ## Intended capabilities
 
@@ -49,6 +50,18 @@ verify CreateBellPair
 ```
 
 See [`examples/bell.e7q`](examples/bell.e7q), the [language specification](docs/E7Q_Language_Specification.md), and the [roadmap](ROADMAP.md).
+
+Compare two circuits under a declared equivalence criterion:
+
+```bash
+e7q compare examples/identity-direct.e7q \
+  examples/identity-optimized.e7q \
+  --criterion global-phase \
+  --proof equivalence.proof.json
+```
+
+Supported criteria are exact unitary equality, equality up to global phase,
+computational-basis measurement equivalence, and tolerance-based equality.
 
 ## Relationship to E7G-T
 
