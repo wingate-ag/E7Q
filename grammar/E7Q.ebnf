@@ -1,4 +1,4 @@
-(* E7Q v0.3 draft grammar *)
+(* E7Q v0.4 draft grammar *)
 program = { declaration }, verify_stmt ;
 declaration = context_decl | register_decl | invariant_decl | path_decl ;
 context_decl = "context", identifier, "{", { setting }, "}" ;
@@ -6,10 +6,12 @@ setting = identifier, ":", value ;
 register_decl = ("qubits" | "bits"), identifier, "[", integer, "]" ;
 invariant_decl = "invariant", ("normalized" | "outcomes", "in", set_literal) ;
 path_decl = "path", identifier, "{", { operation }, "}" ;
-operation = gate_operation | measurement | conditional_gate ;
+operation = gate_operation | measurement | conditional_gate | path_use | assertion ;
 gate_operation = gate, reference, [",", reference] ;
 measurement = "measure", (identifier | reference), "->", (identifier | reference) ;
 conditional_gate = "if", reference, "==", bit, gate, reference ;
+path_use = "use", identifier ;
+assertion = "assert", reference, "==", bit ;
 verify_stmt = "verify", identifier ;
 reference = identifier, "[", integer, "]" ;
 gate = "X" | "Y" | "Z" | "H" | "S" | "T" | "CX" | "CZ" | "SWAP" ;
