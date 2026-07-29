@@ -158,3 +158,12 @@
 - [x] first-breach detection and deterministic trend Proof-of-Path;
 - [x] explicit ordering, chronology, causality, authenticity, stability, and fidelity boundary;
 - [ ] provider-authenticated scheduled monitoring and causal diagnostics.
+
+## v1.0rc1 — Offline release conformance
+
+- [x] registered stable offline artifact families;
+- [x] deterministic structural conformance reports;
+- [x] CLI integration and regression tests;
+- [x] explicit offline completion and evidence boundary;
+- [x] credential-free roadmap complete;
+- [ ] optional provider integrations, maintained outside the offline core.
