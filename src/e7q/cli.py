@@ -11,6 +11,7 @@ from .adapters import adapt, adapter_result
 from .assessment import assess_receipt, load_reference, load_receipt
 from .bundles import build_execution_bundle
 from .campaigns import assess_replication, load_replication_receipts
+from .drift import assess_drift, load_replication_report
 from .calibration import load_snapshot, select_target
 from .ingestion import load_vendor_export
 from .language import (
@@ -77,6 +78,12 @@ def _parser() -> argparse.ArgumentParser:
     replicate.add_argument("--max-pairwise-tvd", type=float, default=0.1)
     replicate.add_argument("--significance-level", type=float, default=0.05)
     replicate.add_argument("-o", "--output", required=True, type=Path)
+    drift = commands.add_parser("drift")
+    drift.add_argument("baseline", type=Path)
+    drift.add_argument("candidate", type=Path)
+    drift.add_argument("--max-total-variation", type=float, default=0.1)
+    drift.add_argument("--significance-level", type=float, default=0.05)
+    drift.add_argument("-o", "--output", required=True, type=Path)
     select = commands.add_parser("select")
     select.add_argument("source")
     select.add_argument("--snapshot", required=True, type=Path)
@@ -153,6 +160,18 @@ def main(argv: list[str] | None = None) -> int:
             )
             print(f"Replication report: {args.output}")
             return 0 if report["status"] == "PASS" else 1
+        if args.command == "drift":
+            report = assess_drift(
+                load_replication_report(args.baseline),
+                load_replication_report(args.candidate),
+                max_total_variation=args.max_total_variation,
+                significance_level=args.significance_level,
+            )
+            args.output.write_text(
+                json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+            )
+            print(f"Drift report: {args.output}")
+            return 0 if report["status"] == "NO_DRIFT" else 1
         if args.command == "compare":
             comparison = compare(
                 load(args.first), load(args.second), args.criterion, args.tolerance
