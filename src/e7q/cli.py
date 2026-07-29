@@ -12,6 +12,11 @@ from .language import (
     E7QError, backend_profile, compare, comparison_result, compilation_result,
     compile_topology, load, openqasm, proof_json, run, topology_edges, verify,
 )
+from .planning import plan, plan_result
+
+
+def _native_gates(value: str) -> frozenset[str]:
+    return frozenset(item.strip().upper() for item in value.split(",") if item.strip())
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -43,18 +48,22 @@ def _parser() -> argparse.ArgumentParser:
     compare_command.add_argument("--proof", type=Path)
     capabilities = commands.add_parser("capabilities")
     capabilities.add_argument("source")
-    compile_command = commands.add_parser("compile")
-    compile_command.add_argument("source")
-    compile_command.add_argument(
-        "--topology", choices=["linear", "ring", "all-to-all"], default="linear"
-    )
-    compile_command.add_argument(
-        "--native-gates",
-        default="X,Y,Z,H,S,T,CX,CZ,SWAP",
-        help="comma-separated native gate set",
-    )
-    compile_command.add_argument("-o", "--output", type=Path)
-    compile_command.add_argument("--proof", type=Path)
+    for name in ("compile", "plan"):
+        command = commands.add_parser(name)
+        command.add_argument("source")
+        command.add_argument(
+            "--topology",
+            choices=["linear", "ring", "all-to-all"],
+            default="linear",
+        )
+        command.add_argument(
+            "--native-gates",
+            default="X,Y,Z,H,S,T,CX,CZ,SWAP",
+            help="comma-separated native gate set",
+        )
+        command.add_argument("--proof", type=Path)
+        if name == "compile":
+            command.add_argument("-o", "--output", type=Path)
     return parser
 
 
@@ -76,14 +85,25 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"Proof-of-Path: {args.proof}")
             return 0 if comparison.equivalent else 1
         program = load(args.source)
-        if args.command == "compile":
-            native = frozenset(
-                item.strip().upper()
-                for item in args.native_gates.split(",")
-                if item.strip()
+        if args.command == "plan":
+            result = plan_result(
+                plan(program, args.topology, _native_gates(args.native_gates))
             )
+            print(json.dumps({
+                "status": result["status"],
+                "source": result["source"],
+                "compiled": result["compiled"],
+                "overhead": result["overhead"],
+            }, indent=2, sort_keys=True))
+            if args.proof:
+                args.proof.write_text(proof_json(result), encoding="utf-8")
+                print(f"Proof-of-Path: {args.proof}", file=sys.stderr)
+            return 0
+        if args.command == "compile":
             compilation = compile_topology(
-                program, topology_edges(program.qubits, args.topology), native
+                program,
+                topology_edges(program.qubits, args.topology),
+                _native_gates(args.native_gates),
             )
             content = openqasm(compilation.program)
             if args.output:
