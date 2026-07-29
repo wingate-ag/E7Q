@@ -19,7 +19,7 @@ def snapshot():
             "name": "test-target",
             "qubits": 3,
             "topology": "linear",
-            "native_gates": ["H", "CX", "SWAP", "MEASURE"],
+            "native_gates": ["H", "CX", "SWAP"],
             "available": True,
             "queue_depth": 1,
             "single_qubit_error": 0.001,
