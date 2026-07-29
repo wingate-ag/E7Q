@@ -23,7 +23,8 @@ Milestone 6 adds superoperator-based equivalence for declared quantum channels.
 Milestone 7 adds backend-neutral topology-aware compilation and auditable
 SWAP-routing traces. Milestone 8 adds dependency-free IBM Qiskit and Google
 Cirq source adapters with explicit capability boundaries. Milestone 9 adds
-backend-neutral resource estimation and auditable target planning.
+backend-neutral resource estimation and auditable target planning. Milestone
+10 adds offline calibration snapshots and evidence-bounded target selection.
 
 ## Quick examples
 
@@ -38,6 +39,9 @@ e7q compile examples/nonlocal-cx.e7q --topology linear \
   -o nonlocal-cx.qasm --proof compilation.proof.json
 e7q export examples/bell.e7q --format qiskit -o bell_qiskit.py \\
   --proof adapter.proof.json
+e7q select examples/nonlocal-cx.e7q \\
+  --snapshot examples/calibration-snapshot.json \\
+  --proof selection.proof.json
 ```
 
 Compare unitary circuits under an explicit criterion:
@@ -63,6 +67,7 @@ See the [quickstart](docs/QUICKSTART.md), [Milestone 3 guide](docs/MILESTONE_3.m
 [Milestone 7 guide](docs/MILESTONE_7.md),
 [Milestone 8 guide](docs/MILESTONE_8.md),
 [Milestone 9 guide](docs/MILESTONE_9.md),
+[Milestone 10 guide](docs/MILESTONE_10.md),
 [language specification](docs/E7Q_Language_Specification.md), and [roadmap](ROADMAP.md).
 
 ## Relationship to E7G-T
