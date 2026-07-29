@@ -66,14 +66,13 @@
 - [ ] credential-dependent hardware submission;
 - [ ] calibrated cost models and hardware-derived fidelity estimates.
 
-+
-+## v0.9 — Resource estimation and target planning
-+
-+- [x] deterministic logical and routed gate counts;
-+- [x] dependency-aware circuit depth and two-qubit depth;
-+- [x] routing-overhead comparison;
-+- [x] machine-readable planning Proof-of-Path;
-+- [x] explicit static-estimate boundary;
-+- [ ] credential-dependent hardware submission;
-+- [ ] calibration-derived cost and fidelity estimates.
-+
+
+## v0.9 — Resource estimation and target planning
+
+- [x] deterministic logical and routed gate counts;
+- [x] dependency-aware circuit depth and two-qubit depth;
+- [x] routing-overhead comparison;
+- [x] machine-readable planning Proof-of-Path;
+- [x] explicit static-estimate boundary;
+- [ ] credential-dependent hardware submission;
+- [ ] calibration-derived cost and fidelity estimates.
