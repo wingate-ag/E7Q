@@ -8,13 +8,7 @@ from e7q.cli import main
 from e7q.language import E7QError, parse
 
 
-SOURCE = b"""program bundle_demo
-qubits 2
-bits 2
-H 0
-CX 0 1
-MEASURE
-"""
+SOURCE = b"""context BundleDemo {\n  shots: 1000\n  backend: statevector\n  seed: 7\n}\n\nqubits q[2]\nbits c[2]\n\ninvariant normalized\ninvariant outcomes in {00, 11}\n\npath Prepare {\n  H q[0]\n  CX q[0], q[1]\n  measure q -> c\n}\n\nverify Prepare\n"""
 
 
 def snapshot():
