@@ -1,6 +1,6 @@
 # E7Q Language Specification
 
-**Version:** 0.17.0-dev
+**Version:** 1.0.0-rc1
 **Status:** experimental draft
 **Documentation licence:** CC-BY-SA-4.0
 
@@ -247,3 +247,17 @@ declared threshold. `TREND_DETECTED` means at least one did. File order is a
 user declaration, not authenticated chronology. Neither verdict proves
 continuous monitoring, provider authenticity, causation, device stability, or
 physical fidelity.
+
+## 19. Offline artifact conformance
+
+E7Q registers the stable offline artifact families produced by calibration
+ingestion, execution handoff, result normalization, statistical assessment,
+replication, drift, and trend analysis. A conforming implementation may emit
+an `e7q.conformance-report/v1` that checks a declared artifact schema and its
+required top-level evidence.
+
+A conformance PASS establishes structural compatibility only. It does not
+recompute every semantic claim, authenticate a provider, attest chronology or
+run independence, prove hardware execution, or establish physical fidelity.
+The v1.0 release boundary is the credential-free, provider-neutral toolchain;
+live vendor integrations remain optional external adapters.
