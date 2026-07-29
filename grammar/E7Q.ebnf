@@ -1,9 +1,10 @@
-(* E7Q v0.5 draft grammar *)
-program = { declaration }, verify_stmt ;
-declaration = context_decl | register_decl | invariant_decl | path_decl ;
+(* E7Q v1.0 release-candidate grammar. Identifier uniqueness is semantic. *)
+program = context_decl, quantum_register_decl, classical_register_decl,
+          { invariant_decl }, path_decl, { path_decl }, verify_stmt ;
 context_decl = "context", identifier, "{", { setting }, "}" ;
 setting = identifier, ":", value ;
-register_decl = ("qubits" | "bits"), identifier, "[", integer, "]" ;
+quantum_register_decl = "qubits", identifier, "[", integer, "]" ;
+classical_register_decl = "bits", identifier, "[", integer, "]" ;
 invariant_decl = "invariant", ("normalized" | "outcomes", "in", set_literal) ;
 path_decl = "path", identifier, "{", { operation }, "}" ;
 operation = gate_operation | measurement | conditional_gate | path_use | assertion | noise ;
