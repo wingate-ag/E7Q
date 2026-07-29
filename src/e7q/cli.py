@@ -8,6 +8,7 @@ from pathlib import Path
 import sys
 
 from .adapters import adapt, adapter_result
+from .calibration import load_snapshot, select_target
 from .language import (
     E7QError, backend_profile, compare, comparison_result, compilation_result,
     compile_topology, load, openqasm, proof_json, run, topology_edges, verify,
@@ -48,6 +49,10 @@ def _parser() -> argparse.ArgumentParser:
     compare_command.add_argument("--proof", type=Path)
     capabilities = commands.add_parser("capabilities")
     capabilities.add_argument("source")
+    select = commands.add_parser("select")
+    select.add_argument("source")
+    select.add_argument("--snapshot", required=True, type=Path)
+    select.add_argument("--proof", type=Path)
     for name in ("compile", "plan"):
         command = commands.add_parser(name)
         command.add_argument("source")
@@ -85,6 +90,18 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"Proof-of-Path: {args.proof}")
             return 0 if comparison.equivalent else 1
         program = load(args.source)
+        if args.command == "select":
+            result = select_target(program, load_snapshot(args.snapshot))
+            print(json.dumps({
+                "status": result["status"],
+                "selected": result["selected"],
+                "score": result["score"],
+                "captured_at": result["captured_at"],
+            }, indent=2, sort_keys=True))
+            if args.proof:
+                args.proof.write_text(proof_json(result), encoding="utf-8")
+                print(f"Proof-of-Path: {args.proof}", file=sys.stderr)
+            return 0
         if args.command == "plan":
             result = plan_result(
                 plan(program, args.topology, _native_gates(args.native_gates))

@@ -1,0 +1,28 @@
+{
+  "schema": "e7q.calibration/v1",
+  "captured_at": "2026-07-29T00:00:00Z",
+  "targets": [
+    {
+      "name": "reference-linear-5",
+      "qubits": 5,
+      "topology": "linear",
+      "native_gates": ["X", "Y", "Z", "H", "S", "T", "CX", "CZ", "SWAP"],
+      "available": true,
+      "queue_depth": 12,
+      "single_qubit_error": 0.001,
+      "two_qubit_error": 0.015,
+      "readout_error": 0.02
+    },
+    {
+      "name": "reference-all-to-all-3",
+      "qubits": 3,
+      "topology": "all-to-all",
+      "native_gates": ["X", "Y", "Z", "H", "S", "T", "CX", "CZ", "SWAP"],
+      "available": true,
+      "queue_depth": 4,
+      "single_qubit_error": 0.002,
+      "two_qubit_error": 0.01,
+      "readout_error": 0.015
+    }
+  ]
+}
