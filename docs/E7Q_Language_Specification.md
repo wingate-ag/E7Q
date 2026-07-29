@@ -1,6 +1,6 @@
 # E7Q Language Specification
 
-**Version:** 0.16.0-dev
+**Version:** 0.17.0-dev
 **Status:** experimental draft
 **Documentation licence:** CC-BY-SA-4.0
 
@@ -231,3 +231,19 @@ the declared thresholds. `DRIFT` means at least one threshold fails. Neither
 status authenticates collection time or provider, identifies a cause, proves
 device stability, or establishes physical fidelity. Low expected cells weaken
 the asymptotic test and must be disclosed.
+
+## 18. Longitudinal trend assessment
+
+E7Q may compare an ordered series of three or more
+`e7q.replication-report/v1` artifacts against the first supplied report as a
+declared baseline. Reports must identify a common target and compatible binary
+outcome space. The resulting `e7q.trend-report/v1` records each
+baseline-relative total-variation distance and chi-square result, applies a
+Bonferroni-adjusted significance level across repeated comparisons, and
+identifies the first threshold breach.
+
+`NO_TREND_DETECTED` means only that no supplied candidate breached either
+declared threshold. `TREND_DETECTED` means at least one did. File order is a
+user declaration, not authenticated chronology. Neither verdict proves
+continuous monitoring, provider authenticity, causation, device stability, or
+physical fidelity.
