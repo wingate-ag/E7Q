@@ -70,6 +70,12 @@ e7q trend baseline.json campaign-1.json campaign-2.json \\
 e7q validate-artifact trend-report.json -o conformance-report.json
 ```
 
+Artifact validation reports `PASS` with
+`conformance: STRUCTURALLY_CONFORMANT` and `validation_scope: structure-only`
+only when the registered schema and required top-level evidence are present.
+This is not semantic recomputation, provider authentication, or evidence of
+physical execution.
+
 Compare unitary circuits under an explicit criterion:
 
 ```bash
