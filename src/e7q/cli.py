@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 import sys
 
+from .adapters import adapt, adapter_result
 from .language import (
     E7QError, backend_profile, compare, comparison_result, compilation_result,
     compile_topology, load, openqasm, proof_json, run, topology_edges, verify,
@@ -22,7 +23,10 @@ def _parser() -> argparse.ArgumentParser:
         command.add_argument("--proof", type=Path)
     export = commands.add_parser("export")
     export.add_argument("source")
-    export.add_argument("--format", choices=["openqasm"], default="openqasm")
+    export.add_argument(
+        "--format", choices=["openqasm", "qiskit", "cirq"], default="openqasm"
+    )
+    export.add_argument("--proof", type=Path)
     export.add_argument("-o", "--output", type=Path)
     compare_command = commands.add_parser("compare")
     compare_command.add_argument("first")
@@ -96,11 +100,22 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps(backend_profile(program), indent=2, sort_keys=True))
             return 0
         if args.command == "export":
-            content = openqasm(program)
+            if args.format == "openqasm":
+                content = openqasm(program)
+                result = None
+            else:
+                output = adapt(program, args.format)
+                content = output.source
+                result = adapter_result(output)
             if args.output:
                 args.output.write_text(content, encoding="utf-8")
             else:
                 print(content, end="")
+            if args.proof:
+                if result is None:
+                    raise E7QError("adapter proof requires qiskit or cirq format")
+                args.proof.write_text(proof_json(result), encoding="utf-8")
+                print(f"Proof-of-Path: {args.proof}", file=sys.stderr)
             return 0
         result = verify(run(program))
         if args.proof:

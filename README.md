@@ -21,7 +21,8 @@ Milestone 5 adds a density-matrix reference backend, declared noise channels,
 noise-aware evidence, and machine-readable backend capability profiles.
 Milestone 6 adds superoperator-based equivalence for declared quantum channels.
 Milestone 7 adds backend-neutral topology-aware compilation and auditable
-SWAP-routing traces.
+SWAP-routing traces. Milestone 8 adds dependency-free IBM Qiskit and Google
+Cirq source adapters with explicit capability boundaries.
 
 ## Quick examples
 
@@ -34,6 +35,8 @@ e7q verify examples/noisy-bell.e7q --proof noisy-bell.proof.json
 e7q capabilities examples/noisy-bell.e7q
 e7q compile examples/nonlocal-cx.e7q --topology linear \
   -o nonlocal-cx.qasm --proof compilation.proof.json
+e7q export examples/bell.e7q --format qiskit -o bell_qiskit.py \\
+  --proof adapter.proof.json
 ```
 
 Compare unitary circuits under an explicit criterion:
@@ -57,6 +60,7 @@ See the [quickstart](docs/QUICKSTART.md), [Milestone 3 guide](docs/MILESTONE_3.m
 [Milestone 5 guide](docs/MILESTONE_5.md),
 [Milestone 6 guide](docs/MILESTONE_6.md),
 [Milestone 7 guide](docs/MILESTONE_7.md),
+[Milestone 8 guide](docs/MILESTONE_8.md),
 [language specification](docs/E7Q_Language_Specification.md), and [roadmap](ROADMAP.md).
 
 ## Relationship to E7G-T

@@ -53,5 +53,15 @@
 - [x] semantics-preserving SWAP insertion with restored logical layout;
 - [x] native-gate capability validation;
 - [x] compilation Proof-of-Path with routing and overhead evidence;
-- [ ] vendor IR adapters and credential-dependent hardware submission;
+- [x] IBM Qiskit and Google Cirq source adapters;
+- [ ] credential-dependent hardware submission;
+- [ ] calibrated cost models and hardware-derived fidelity estimates.
+
+## v0.8 — Vendor SDK adapters
+
+- [x] dependency-free IBM Qiskit Python source export;
+- [x] dependency-free Google Cirq Python source export;
+- [x] adapter Proof-of-Path evidence and CLI integration;
+- [x] explicit rejection of unsupported dynamic and noisy programs;
+- [ ] credential-dependent hardware submission;
 - [ ] calibrated cost models and hardware-derived fidelity estimates.
