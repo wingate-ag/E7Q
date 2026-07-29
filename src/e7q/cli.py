@@ -12,6 +12,7 @@ from .assessment import assess_receipt, load_reference, load_receipt
 from .bundles import build_execution_bundle
 from .campaigns import assess_replication, load_replication_receipts
 from .drift import assess_drift, load_replication_report
+from .trends import assess_trend, load_trend_reports
 from .calibration import load_snapshot, select_target
 from .ingestion import load_vendor_export
 from .language import (
@@ -84,6 +85,11 @@ def _parser() -> argparse.ArgumentParser:
     drift.add_argument("--max-total-variation", type=float, default=0.1)
     drift.add_argument("--significance-level", type=float, default=0.05)
     drift.add_argument("-o", "--output", required=True, type=Path)
+    trend = commands.add_parser("trend")
+    trend.add_argument("campaigns", nargs="+", type=Path)
+    trend.add_argument("--max-total-variation", type=float, default=0.1)
+    trend.add_argument("--significance-level", type=float, default=0.05)
+    trend.add_argument("-o", "--output", required=True, type=Path)
     select = commands.add_parser("select")
     select.add_argument("source")
     select.add_argument("--snapshot", required=True, type=Path)
@@ -172,6 +178,17 @@ def main(argv: list[str] | None = None) -> int:
             )
             print(f"Drift report: {args.output}")
             return 0 if report["status"] == "NO_DRIFT" else 1
+        if args.command == "trend":
+            report = assess_trend(
+                load_trend_reports(args.campaigns),
+                max_total_variation=args.max_total_variation,
+                significance_level=args.significance_level,
+            )
+            args.output.write_text(
+                json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+            )
+            print(f"Trend report: {args.output}")
+            return 0 if report["status"] == "NO_TREND_DETECTED" else 1
         if args.command == "compare":
             comparison = compare(
                 load(args.first), load(args.second), args.criterion, args.tolerance
