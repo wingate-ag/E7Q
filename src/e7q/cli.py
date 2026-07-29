@@ -8,6 +8,7 @@ from pathlib import Path
 import sys
 
 from .adapters import adapt, adapter_result
+from .assessment import assess_receipt, load_reference, load_receipt
 from .bundles import build_execution_bundle
 from .calibration import load_snapshot, select_target
 from .ingestion import load_vendor_export
@@ -66,6 +67,10 @@ def _parser() -> argparse.ArgumentParser:
     receipt.add_argument("bundle", type=Path)
     receipt.add_argument("--result", required=True, type=Path)
     receipt.add_argument("-o", "--output", required=True, type=Path)
+    assess = commands.add_parser("assess")
+    assess.add_argument("receipt", type=Path)
+    assess.add_argument("--reference", required=True, type=Path)
+    assess.add_argument("-o", "--output", required=True, type=Path)
     select = commands.add_parser("select")
     select.add_argument("source")
     select.add_argument("--snapshot", required=True, type=Path)
@@ -122,6 +127,15 @@ def main(argv: list[str] | None = None) -> int:
             )
             print(f"Execution receipt: {args.output}")
             return 0
+        if args.command == "assess":
+            assessment = assess_receipt(
+                load_receipt(args.receipt), load_reference(args.reference)
+            )
+            args.output.write_text(
+                json.dumps(assessment, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+            )
+            print(f"Execution assessment: {args.output}")
+            return 0 if assessment["status"] == "PASS" else 1
         if args.command == "compare":
             comparison = compare(
                 load(args.first), load(args.second), args.criterion, args.tolerance
