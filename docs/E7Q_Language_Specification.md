@@ -1,6 +1,6 @@
 # E7Q Language Specification
 
-**Version:** 0.11.0-dev
+**Version:** 0.12.0-dev
 **Status:** experimental draft
 **Documentation licence:** CC-BY-SA-4.0
 
@@ -160,3 +160,16 @@ Ingestion is an offline transformation of supplied evidence. Conformance does
 not imply network access, vendor authentication, authenticity verification,
 live calibration retrieval, job submission, cost knowledge, or guaranteed
 hardware fidelity.
+
+
+## 13. Reproducible execution bundles
+
+E7Q may combine a source program and a supplied calibration snapshot into an
+`e7q.execution-bundle/v1` artifact. The bundle must identify its inputs with
+SHA-256 digests, name the selected target, contain the topology-routed OpenQASM,
+record the shot count and resource plan, and include Proof-of-Path evidence.
+
+Bundle creation is deterministic for identical inputs. A conforming bundle must
+distinguish `READY` from `submitted` and default to `submitted: false`.
+It is an offline handoff artifact: it does not establish vendor authentication,
+job acceptance, queue state, price, physical fidelity, or measured results.
