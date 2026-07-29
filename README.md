@@ -22,7 +22,7 @@ noise-aware evidence, and machine-readable backend capability profiles.
 Milestone 6 adds superoperator-based equivalence for declared quantum channels.
 Milestone 7 adds backend-neutral topology-aware compilation and auditable
 SWAP-routing traces. Milestone 8 adds dependency-free IBM Qiskit and Google
-Cirq source adapters with explicit capability boundaries.
+Cirq source adapters with explicit capability boundaries. Milestone 9 adds\nbackend-neutral resource estimation and auditable target planning.
 
 ## Quick examples
 
@@ -60,7 +60,7 @@ See the [quickstart](docs/QUICKSTART.md), [Milestone 3 guide](docs/MILESTONE_3.m
 [Milestone 5 guide](docs/MILESTONE_5.md),
 [Milestone 6 guide](docs/MILESTONE_6.md),
 [Milestone 7 guide](docs/MILESTONE_7.md),
-[Milestone 8 guide](docs/MILESTONE_8.md),
+[Milestone 8 guide](docs/MILESTONE_8.md),\n[Milestone 9 guide](docs/MILESTONE_9.md),
 [language specification](docs/E7Q_Language_Specification.md), and [roadmap](ROADMAP.md).
 
 ## Relationship to E7G-T
