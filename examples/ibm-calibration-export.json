@@ -1,0 +1,17 @@
+{
+  "schema": "e7q.vendor.ibm/v1",
+  "captured_at": "2026-07-29T06:00:00Z",
+  "targets": [
+    {
+      "name": "example-ibm-target",
+      "qubits": 5,
+      "topology": "linear",
+      "native_gates": ["x", "h", "cx", "swap"],
+      "available": true,
+      "queue_depth": 4,
+      "single_qubit_error": 0.001,
+      "two_qubit_error": 0.012,
+      "readout_error": 0.025
+    }
+  ]
+}
