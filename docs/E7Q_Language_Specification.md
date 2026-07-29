@@ -1,6 +1,6 @@
 # E7Q Language Specification
 
-**Version:** 0.12.0-dev
+**Version:** 0.13.0-dev
 **Status:** experimental draft
 **Documentation licence:** CC-BY-SA-4.0
 
@@ -173,3 +173,17 @@ Bundle creation is deterministic for identical inputs. A conforming bundle must
 distinguish `READY` from `submitted` and default to `submitted: false`.
 It is an offline handoff artifact: it does not establish vendor authentication,
 job acceptance, queue state, price, physical fidelity, or measured results.
+
+
+## 14. Execution-result receipts
+
+E7Q may normalize a user-supplied `e7q.execution-result/v1` document against
+an `e7q.execution-bundle/v1` artifact. It must validate target and shot
+linkage, require non-negative integer counts whose total equals the declared
+shots, and record empirical probabilities, input digests, provider metadata,
+and Proof-of-Path evidence in `e7q.execution-receipt/v1`.
+
+Receipt conformance establishes internal consistency of the supplied files
+only. It does not authenticate the provider, prove that E7Q submitted or
+witnessed the job, establish live calibration, or claim cost or physical
+fidelity.
