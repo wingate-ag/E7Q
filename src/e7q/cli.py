@@ -9,6 +9,7 @@ import sys
 
 from .adapters import adapt, adapter_result
 from .assessment import assess_receipt, load_reference, load_receipt
+from .artifacts import load_artifact, validate_artifact
 from .bundles import build_execution_bundle
 from .campaigns import assess_replication, load_replication_receipts
 from .drift import assess_drift, load_replication_report
@@ -90,6 +91,9 @@ def _parser() -> argparse.ArgumentParser:
     trend.add_argument("--max-total-variation", type=float, default=0.1)
     trend.add_argument("--significance-level", type=float, default=0.05)
     trend.add_argument("-o", "--output", required=True, type=Path)
+    artifact = commands.add_parser("validate-artifact")
+    artifact.add_argument("source", type=Path)
+    artifact.add_argument("-o", "--output", type=Path)
     select = commands.add_parser("select")
     select.add_argument("source")
     select.add_argument("--snapshot", required=True, type=Path)
@@ -189,6 +193,15 @@ def main(argv: list[str] | None = None) -> int:
             )
             print(f"Trend report: {args.output}")
             return 0 if report["status"] == "NO_TREND_DETECTED" else 1
+        if args.command == "validate-artifact":
+            report = validate_artifact(load_artifact(args.source))
+            content = json.dumps(report, indent=2, sort_keys=True) + "\\n"
+            if args.output:
+                args.output.write_text(content, encoding="utf-8")
+                print(f"Conformance report: {args.output}")
+            else:
+                print(content, end="")
+            return 0 if report["status"] == "PASS" else 1
         if args.command == "compare":
             comparison = compare(
                 load(args.first), load(args.second), args.criterion, args.tolerance
