@@ -57,6 +57,8 @@ e7q receipt execution-bundle.json \\
   --result provider-result.json -o execution-receipt.json
 e7q assess execution-receipt.json \\
   --reference examples/bell-reference.json -o execution-assessment.json
+e7q replicate receipt-1.json receipt-2.json receipt-3.json \\
+  -o replication-report.json
 ```
 
 Compare unitary circuits under an explicit criterion:
