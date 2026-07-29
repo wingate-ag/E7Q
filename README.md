@@ -30,6 +30,7 @@ provenance and freshness validation. Milestone 12 adds reproducible offline
 execution bundles for credentialed handoff. Milestone 13 adds offline execution-result
 receipts with strict bundle linkage and empirical count evidence. Milestone 14 adds
 evidence-bounded statistical assessment against an explicit reference distribution.
+Milestone 15 adds repeatability assessment across linked execution receipts.
 
 ## Quick examples
 
@@ -56,6 +57,8 @@ e7q receipt execution-bundle.json \\
   --result provider-result.json -o execution-receipt.json
 e7q assess execution-receipt.json \\
   --reference examples/bell-reference.json -o execution-assessment.json
+e7q replicate receipt-1.json receipt-2.json receipt-3.json \\
+  -o replication-report.json
 ```
 
 Compare unitary circuits under an explicit criterion:
@@ -86,6 +89,7 @@ See the [quickstart](docs/QUICKSTART.md), [Milestone 3 guide](docs/MILESTONE_3.m
 [Milestone 12 guide](docs/MILESTONE_12.md),
 [Milestone 13 guide](docs/MILESTONE_13.md),
 [Milestone 14 guide](docs/MILESTONE_14.md),
+[Milestone 15 guide](docs/MILESTONE_15.md),
 [language specification](docs/E7Q_Language_Specification.md), and [roadmap](ROADMAP.md).
 
 ## Relationship to E7G-T

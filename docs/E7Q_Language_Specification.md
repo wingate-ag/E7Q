@@ -1,6 +1,6 @@
 # E7Q Language Specification
 
-**Version:** 0.14.0-dev
+**Version:** 0.15.0-dev
 **Status:** experimental draft
 **Documentation licence:** CC-BY-SA-4.0
 
@@ -202,3 +202,16 @@ declared thresholds for this finite sample. It does not prove the reference
 model, provider authenticity, device correctness, quantum advantage, or
 physical fidelity. Small expected cell counts weaken the chi-square
 approximation and must be disclosed in the report.
+
+## 16. Replication campaigns
+
+E7Q may assess two or more `e7q.execution-receipt/v1` artifacts that identify
+the same execution bundle and target. Each receipt must have a unique result
+digest, valid counts, and a common outcome width. The resulting
+`e7q.replication-report/v1` pools counts, records every pairwise
+total-variation distance, and applies a Pearson chi-square homogeneity test.
+
+A PASS means only that the supplied runs satisfy both declared repeatability
+thresholds. It does not prove run independence, provider authenticity, device
+correctness, reference truth, quantum advantage, or physical fidelity. Small
+expected cells weaken the asymptotic homogeneity test and must be disclosed.

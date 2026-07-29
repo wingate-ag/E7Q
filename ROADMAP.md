@@ -129,3 +129,13 @@
 - [x] deterministic assessment report and Proof-of-Path boundary;
 - [x] CLI integration, documentation, examples, and regression tests;
 - [ ] provider-authenticated result retrieval and hardware attribution.
+
+## v0.15 — Replication campaigns
+
+- [x] same-bundle and same-target receipt validation;
+- [x] duplicate-result rejection and pooled count evidence;
+- [x] pairwise total-variation repeatability diagnostics;
+- [x] chi-square homogeneity assessment and low-cell warnings;
+- [x] deterministic replication Proof-of-Path and CLI integration;
+- [x] explicit offline, independence, authenticity, and fidelity boundary;
+- [ ] provider-authenticated campaign retrieval and run independence attestation.
