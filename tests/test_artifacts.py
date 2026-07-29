@@ -19,6 +19,8 @@ def trend():
 def test_known_artifact_passes():
     result = validate_artifact(trend())
     assert result["status"] == "PASS"
+    assert result["conformance"] == "STRUCTURALLY_CONFORMANT"
+    assert result["validation_scope"] == "structure-only"
     assert result["artifact_schema"] == "e7q.trend-report/v1"
 
 
@@ -27,6 +29,7 @@ def test_missing_required_evidence_fails():
     del value["proof"]
     result = validate_artifact(value)
     assert result["status"] == "FAIL"
+    assert result["conformance"] == "NONCONFORMANT"
     assert any(
         check["name"] == "required-field:proof" and not check["passed"]
         for check in result["checks"]
@@ -34,7 +37,9 @@ def test_missing_required_evidence_fails():
 
 
 def test_unknown_schema_fails():
-    assert validate_artifact({"schema": "example.unknown/v1"})["status"] == "FAIL"
+    result = validate_artifact({"schema": "example.unknown/v1"})
+    assert result["status"] == "FAIL"
+    assert result["conformance"] == "NONCONFORMANT"
 
 
 def test_validate_artifact_cli(tmp_path):
@@ -44,3 +49,5 @@ def test_validate_artifact_cli(tmp_path):
     assert main(["validate-artifact", str(source), "-o", str(output)]) == 0
     result = json.loads(output.read_text(encoding="utf-8"))
     assert result["schema"] == "e7q.conformance-report/v1"
+    assert result["status"] == "PASS"
+    assert result["conformance"] == "STRUCTURALLY_CONFORMANT"
