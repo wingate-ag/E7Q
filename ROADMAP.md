@@ -76,3 +76,13 @@
 - [x] explicit static-estimate boundary;
 - [ ] credential-dependent hardware submission;
 - [ ] calibration-derived cost and fidelity estimates.
+
+## v0.10 — Calibration snapshots and target selection
+
+- [x] versioned, timestamped offline calibration snapshots;
+- [x] compatibility filtering and topology-aware candidate planning;
+- [x] transparent success-proxy ranking with deterministic ties;
+- [x] observed-versus-estimated Proof-of-Path evidence;
+- [x] explicit rejection of live-data, submission, cost, and fidelity claims;
+- [ ] credential-dependent hardware submission;
+- [ ] vendor calibration ingestion adapters.
