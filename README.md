@@ -28,7 +28,8 @@ backend-neutral resource estimation and auditable target planning. Milestone
 Milestone 11 adds offline IBM and Google calibration-export normalization with
 provenance and freshness validation. Milestone 12 adds reproducible offline
 execution bundles for credentialed handoff. Milestone 13 adds offline execution-result
-receipts with strict bundle linkage and empirical count evidence.
+receipts with strict bundle linkage and empirical count evidence. Milestone 14 adds
+evidence-bounded statistical assessment against an explicit reference distribution.
 
 ## Quick examples
 
@@ -53,6 +54,8 @@ e7q bundle examples/nonlocal-cx.e7q \\
   --shots 1000 -o execution-bundle.json
 e7q receipt execution-bundle.json \\
   --result provider-result.json -o execution-receipt.json
+e7q assess execution-receipt.json \\
+  --reference examples/bell-reference.json -o execution-assessment.json
 ```
 
 Compare unitary circuits under an explicit criterion:
@@ -82,6 +85,7 @@ See the [quickstart](docs/QUICKSTART.md), [Milestone 3 guide](docs/MILESTONE_3.m
 [Milestone 11 guide](docs/MILESTONE_11.md),
 [Milestone 12 guide](docs/MILESTONE_12.md),
 [Milestone 13 guide](docs/MILESTONE_13.md),
+[Milestone 14 guide](docs/MILESTONE_14.md),
 [language specification](docs/E7Q_Language_Specification.md), and [roadmap](ROADMAP.md).
 
 ## Relationship to E7G-T
