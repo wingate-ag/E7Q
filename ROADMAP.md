@@ -118,3 +118,14 @@
 - [x] Proof-of-Path provenance and evidence boundary;
 - [x] CLI integration, documentation, and regression tests;
 - [ ] credential-dependent provider authentication and hardware submission.
+
+
+## v0.14 — Statistical result assessment
+
+- [x] explicit reference-distribution schema and validation;
+- [x] total-variation distance and Pearson chi-square evidence;
+- [x] dependency-free asymptotic p-value calculation;
+- [x] configurable distance and significance thresholds;
+- [x] deterministic assessment report and Proof-of-Path boundary;
+- [x] CLI integration, documentation, examples, and regression tests;
+- [ ] provider-authenticated result retrieval and hardware attribution.
