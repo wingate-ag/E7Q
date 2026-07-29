@@ -256,7 +256,8 @@ replication, drift, and trend analysis. A conforming implementation may emit
 an `e7q.conformance-report/v1` that checks a declared artifact schema and its
 required top-level evidence.
 
-A conformance PASS establishes structural compatibility only. It does not
+A conformance `PASS`, additionally labelled `STRUCTURALLY_CONFORMANT`,
+establishes structural compatibility only. It does not
 recompute every semantic claim, authenticate a provider, attest chronology or
 run independence, prove hardware execution, or establish physical fidelity.
 The v1.0 release boundary is the credential-free, provider-neutral toolchain;

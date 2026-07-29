@@ -93,11 +93,57 @@ def _required(pattern: str, source: str, label: str) -> re.Match[str]:
     return match
 
 
+_TOP_LEVEL_DECLARATION = re.compile(
+    r"""
+    context\s+\w+\s*\{.*?\}
+    |(?:qubits|bits)\s+\w+\[\d+\]
+    |invariant\s+normalized\b
+    |invariant\s+outcomes\s+in\s*\{[^}]+\}
+    |path\s+\w+\s*\{.*?\}
+    |verify\s+\w+
+    """,
+    re.S | re.X,
+)
+
+
+def _validate_complete_source(source: str) -> None:
+    """Reject non-comment input outside recognized top-level declarations."""
+    cursor = 0
+    for match in _TOP_LEVEL_DECLARATION.finditer(source):
+        unconsumed = source[cursor:match.start()]
+        if unconsumed.strip():
+            fragment = unconsumed.strip().splitlines()[0]
+            raise E7QError(f"unrecognized top-level input: {fragment}")
+        cursor = match.end()
+    unconsumed = source[cursor:]
+    if unconsumed.strip():
+        fragment = unconsumed.strip().splitlines()[0]
+        raise E7QError(f"unrecognized top-level input: {fragment}")
+
+
+def _parse_settings(source: str) -> dict[str, str]:
+    """Parse a context body without silently dropping malformed fragments."""
+    pattern = re.compile(r'(\w+)\s*:\s*("(?:[^"\\]|\\.)*"|[^\s}]+)')
+    settings: dict[str, str] = {}
+    cursor = 0
+    for match in pattern.finditer(source):
+        if source[cursor:match.start()].strip():
+            fragment = source[cursor:match.start()].strip().splitlines()[0]
+            raise E7QError(f"invalid context setting: {fragment}")
+        settings[match.group(1)] = match.group(2)
+        cursor = match.end()
+    if source[cursor:].strip():
+        fragment = source[cursor:].strip().splitlines()[0]
+        raise E7QError(f"invalid context setting: {fragment}")
+    return settings
+
+
 def parse(source: str) -> Program:
     """Parse E7Q source, including partial measurement and classical control."""
     text = _strip_comments(source)
+    _validate_complete_source(text)
     context = _required(r"context\s+(\w+)\s*\{(.*?)\}", text, "context")
-    settings = dict(re.findall(r"(\w+)\s*:\s*([^\s}]+)", context.group(2)))
+    settings = _parse_settings(context.group(2))
     try:
         shots = int(settings.get("shots", "1024"))
     except ValueError as exc:
