@@ -14,7 +14,8 @@ The command checks that an artifact declares a registered schema and contains
 the required top-level evidence for that artifact family. It emits a
 deterministic `e7q.conformance-report/v1`.
 
-This is structural conformance, not full semantic recomputation. A PASS does
+This is structural conformance, not full semantic recomputation. A `PASS` is
+additionally labelled `STRUCTURALLY_CONFORMANT` and does
 not authenticate a provider, attest chronology or run independence, prove that
 hardware executed a bundle, or establish correctness or physical fidelity.
 
