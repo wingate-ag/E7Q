@@ -67,6 +67,7 @@ e7q drift baseline-replication.json candidate-replication.json \\
   -o drift-report.json
 e7q trend baseline.json campaign-1.json campaign-2.json \\
   -o trend-report.json
+e7q validate-artifact trend-report.json -o conformance-report.json
 ```
 
 Compare unitary circuits under an explicit criterion:
