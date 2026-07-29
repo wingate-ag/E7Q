@@ -30,6 +30,7 @@ provenance and freshness validation. Milestone 12 adds reproducible offline
 execution bundles for credentialed handoff. Milestone 13 adds offline execution-result
 receipts with strict bundle linkage and empirical count evidence. Milestone 14 adds
 evidence-bounded statistical assessment against an explicit reference distribution.
+Milestone 15 adds repeatability assessment across linked execution receipts.
 
 ## Quick examples
 
@@ -86,6 +87,7 @@ See the [quickstart](docs/QUICKSTART.md), [Milestone 3 guide](docs/MILESTONE_3.m
 [Milestone 12 guide](docs/MILESTONE_12.md),
 [Milestone 13 guide](docs/MILESTONE_13.md),
 [Milestone 14 guide](docs/MILESTONE_14.md),
+[Milestone 15 guide](docs/MILESTONE_15.md),
 [language specification](docs/E7Q_Language_Specification.md), and [roadmap](ROADMAP.md).
 
 ## Relationship to E7G-T
