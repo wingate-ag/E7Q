@@ -1,0 +1,9 @@
+{
+  "schema": "e7q.reference-distribution/v1",
+  "probabilities": {
+    "00": 0.5,
+    "11": 0.5
+  },
+  "max_total_variation": 0.1,
+  "significance_level": 0.05
+}
