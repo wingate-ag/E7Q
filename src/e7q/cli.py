@@ -10,6 +10,7 @@ import sys
 from .adapters import adapt, adapter_result
 from .assessment import assess_receipt, load_reference, load_receipt
 from .bundles import build_execution_bundle
+from .campaigns import assess_replication, load_replication_receipts
 from .calibration import load_snapshot, select_target
 from .ingestion import load_vendor_export
 from .language import (
@@ -71,6 +72,11 @@ def _parser() -> argparse.ArgumentParser:
     assess.add_argument("receipt", type=Path)
     assess.add_argument("--reference", required=True, type=Path)
     assess.add_argument("-o", "--output", required=True, type=Path)
+    replicate = commands.add_parser("replicate")
+    replicate.add_argument("receipts", nargs="+", type=Path)
+    replicate.add_argument("--max-pairwise-tvd", type=float, default=0.1)
+    replicate.add_argument("--significance-level", type=float, default=0.05)
+    replicate.add_argument("-o", "--output", required=True, type=Path)
     select = commands.add_parser("select")
     select.add_argument("source")
     select.add_argument("--snapshot", required=True, type=Path)
@@ -136,6 +142,17 @@ def main(argv: list[str] | None = None) -> int:
             )
             print(f"Execution assessment: {args.output}")
             return 0 if assessment["status"] == "PASS" else 1
+        if args.command == "replicate":
+            report = assess_replication(
+                load_replication_receipts(args.receipts),
+                max_pairwise_tvd=args.max_pairwise_tvd,
+                significance_level=args.significance_level,
+            )
+            args.output.write_text(
+                json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+            )
+            print(f"Replication report: {args.output}")
+            return 0 if report["status"] == "PASS" else 1
         if args.command == "compare":
             comparison = compare(
                 load(args.first), load(args.second), args.criterion, args.tolerance
