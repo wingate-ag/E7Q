@@ -13,8 +13,12 @@ modelling and accountability vocabulary.
 
 ## 2. Program model
 
-A program contains a context, one quantum register, one classical register,
-invariants, one or more named paths, and a verification target. A path is an
+A program contains exactly one context, exactly one quantum register, exactly
+one classical register, zero or more distinct invariant kinds, one or more
+uniquely named paths, and exactly one verification target. Context-setting
+keys are unique within the context block. Duplicate singleton declarations,
+context keys, invariant kinds, or path names are invalid; an implementation
+must reject them rather than select or overwrite one silently. A path is an
 ordered sequence of unitary transformations, measurements, classically
 conditioned transformations, assertions, and reusable-path references.
 
