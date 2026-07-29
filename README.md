@@ -1,6 +1,6 @@
 # E7Q
 
-**An experimental E7G-T-based, invariant-aware quantum programming and verification language.**
+**An E7G-T-based, invariant-aware quantum programming and verification language.**
 
 E7Q combines established quantum mathematics for execution with E7G-T
 composition, transformation, equivalence, projection, measurement
@@ -12,7 +12,7 @@ compilation.
 
 ## Status
 
-Pre-alpha. Milestones 1–3 provide the executable language, circuit
+v1.0 release candidate. Milestones 1–3 provide the executable language, circuit
 equivalence, partial measurement, classical feed-forward, quantum
 teleportation, and Deutsch–Jozsa reference programs. Milestone 4 adds
 reusable paths, executable assertions, first-failure diagnostics, and
@@ -33,6 +33,8 @@ evidence-bounded statistical assessment against an explicit reference distributi
 Milestone 15 adds repeatability assessment across linked execution receipts.
 Milestone 16 adds evidence-bounded drift assessment between replication campaigns.
 Milestone 17 adds multiplicity-controlled longitudinal trend assessment.
+Milestone 18 closes the credential-free roadmap with machine-readable artifact
+conformance and an explicit offline completion boundary.
 
 ## Quick examples
 
@@ -98,6 +100,7 @@ See the [quickstart](docs/QUICKSTART.md), [Milestone 3 guide](docs/MILESTONE_3.m
 [Milestone 15 guide](docs/MILESTONE_15.md),
 [Milestone 16 guide](docs/MILESTONE_16.md),
 [Milestone 17 guide](docs/MILESTONE_17.md),
+[Milestone 18 guide](docs/MILESTONE_18.md),
 [language specification](docs/E7Q_Language_Specification.md), and [roadmap](ROADMAP.md).
 
 ## Relationship to E7G-T
