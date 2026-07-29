@@ -97,3 +97,15 @@
 - [x] explicit offline and authenticity boundary;
 - [ ] credential-dependent live vendor retrieval;
 - [ ] credential-dependent hardware submission.
+
+
+## v0.12 — Reproducible execution bundles
+
+- [x] deterministic provider-neutral execution bundle schema;
+- [x] selected-target and routed OpenQASM capture;
+- [x] source, snapshot, and compiled-artifact hashes;
+- [x] resource plan, shot count, and Proof-of-Path evidence;
+- [x] explicit ready-versus-submitted state;
+- [x] CLI integration and regression tests;
+- [ ] credential-dependent live vendor retrieval;
+- [ ] credential-dependent hardware submission.
