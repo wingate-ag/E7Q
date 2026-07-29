@@ -8,6 +8,7 @@ from pathlib import Path
 import sys
 
 from .adapters import adapt, adapter_result
+from .bundles import build_execution_bundle
 from .calibration import load_snapshot, select_target
 from .ingestion import load_vendor_export
 from .language import (
@@ -55,6 +56,11 @@ def _parser() -> argparse.ArgumentParser:
     ingest.add_argument("--provider", choices=["ibm", "google"], required=True)
     ingest.add_argument("--max-age-hours", type=float)
     ingest.add_argument("-o", "--output", required=True, type=Path)
+    bundle = commands.add_parser("bundle")
+    bundle.add_argument("source", type=Path)
+    bundle.add_argument("--snapshot", required=True, type=Path)
+    bundle.add_argument("--shots", type=int, default=1000)
+    bundle.add_argument("-o", "--output", required=True, type=Path)
     select = commands.add_parser("select")
     select.add_argument("source")
     select.add_argument("--snapshot", required=True, type=Path)
@@ -89,6 +95,16 @@ def main(argv: list[str] | None = None) -> int:
                 json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8"
             )
             print(f"Calibration snapshot: {args.output}")
+            return 0
+        if args.command == "bundle":
+            source = args.source.read_bytes()
+            result = build_execution_bundle(
+                load(args.source), source, load_snapshot(args.snapshot), shots=args.shots
+            )
+            args.output.write_text(
+                json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+            )
+            print(f"Execution bundle: {args.output}")
             return 0
         if args.command == "compare":
             comparison = compare(
