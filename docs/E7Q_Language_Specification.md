@@ -120,3 +120,17 @@ auditable compilation trace. It does not imply hardware fidelity.
 Vendor-adapter conformance requires syntactically valid Python output, complete
 static gate and measurement coverage, Proof-of-Path evidence, and explicit
 rejection of unsupported program features.
+
++
++## 10. Resource planning
++
++Resource planning schedules quantum operations into dependency-safe layers,
++reports logical and routed gate counts, total depth, two-qubit depth, and SWAP
++overhead, and preserves the compilation trace. These values are static
++properties of the reference program and selected topology. They do not predict
++queue time, monetary cost, device calibration, execution success, or fidelity.
++
++Planning conformance requires deterministic estimates, serialization of gates
++sharing a qubit, parallel eligibility for disjoint gates, terminal-measurement
++barriers, and a machine-readable boundary statement.
++
