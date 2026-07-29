@@ -85,4 +85,15 @@
 - [x] observed-versus-estimated Proof-of-Path evidence;
 - [x] explicit rejection of live-data, submission, cost, and fidelity claims;
 - [ ] credential-dependent hardware submission;
-- [ ] vendor calibration ingestion adapters.
+- [x] vendor calibration ingestion adapters.
+
+## v0.11 — Offline calibration ingestion
+
+- [x] IBM/Qiskit-style supplied-export normalization;
+- [x] Google/Cirq-style supplied-export normalization;
+- [x] schema, timestamp, error-rate, and freshness validation;
+- [x] provider and source-schema provenance;
+- [x] CLI integration and normalized snapshot output;
+- [x] explicit offline and authenticity boundary;
+- [ ] credential-dependent live vendor retrieval;
+- [ ] credential-dependent hardware submission.

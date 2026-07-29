@@ -25,6 +25,8 @@ SWAP-routing traces. Milestone 8 adds dependency-free IBM Qiskit and Google
 Cirq source adapters with explicit capability boundaries. Milestone 9 adds
 backend-neutral resource estimation and auditable target planning. Milestone
 10 adds offline calibration snapshots and evidence-bounded target selection.
+Milestone 11 adds offline IBM and Google calibration-export normalization with
+provenance and freshness validation.
 
 ## Quick examples
 
@@ -39,6 +41,8 @@ e7q compile examples/nonlocal-cx.e7q --topology linear \
   -o nonlocal-cx.qasm --proof compilation.proof.json
 e7q export examples/bell.e7q --format qiskit -o bell_qiskit.py \\
   --proof adapter.proof.json
+e7q ingest-calibration examples/ibm-calibration-export.json \\
+  --provider ibm -o normalized-calibration.json
 e7q select examples/nonlocal-cx.e7q \\
   --snapshot examples/calibration-snapshot.json \\
   --proof selection.proof.json
@@ -68,6 +72,7 @@ See the [quickstart](docs/QUICKSTART.md), [Milestone 3 guide](docs/MILESTONE_3.m
 [Milestone 8 guide](docs/MILESTONE_8.md),
 [Milestone 9 guide](docs/MILESTONE_9.md),
 [Milestone 10 guide](docs/MILESTONE_10.md),
+[Milestone 11 guide](docs/MILESTONE_11.md),
 [language specification](docs/E7Q_Language_Specification.md), and [roadmap](ROADMAP.md).
 
 ## Relationship to E7G-T

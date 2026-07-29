@@ -1,6 +1,6 @@
 # E7Q Language Specification
 
-**Version:** 0.10.0-dev
+**Version:** 0.11.0-dev
 **Status:** experimental draft
 **Documentation licence:** CC-BY-SA-4.0
 
@@ -146,3 +146,17 @@ Selection evidence must distinguish supplied observations from calculated
 estimates and include rejected-target reasons. A selection is advisory: it
 does not establish live calibration, vendor authenticity, execution cost,
 queue time at submission, or physical fidelity.
+
+
+## 12. Offline vendor calibration ingestion
+
+E7Q may normalize user-supplied IBM/Qiskit-style and Google/Cirq-style
+calibration exports into `e7q.calibration/v1`. An adapter must validate its
+provider-specific schema, an ISO 8601 timestamp with timezone, target fields,
+probability ranges, and an optional maximum-age policy. It must retain provider
+and source-schema provenance in the normalized snapshot.
+
+Ingestion is an offline transformation of supplied evidence. Conformance does
+not imply network access, vendor authentication, authenticity verification,
+live calibration retrieval, job submission, cost knowledge, or guaranteed
+hardware fidelity.
