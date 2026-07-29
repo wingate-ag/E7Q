@@ -1,6 +1,6 @@
 # E7Q Language Specification
 
-**Version:** 0.15.0-dev
+**Version:** 0.16.0-dev
 **Status:** experimental draft
 **Documentation licence:** CC-BY-SA-4.0
 
@@ -215,3 +215,19 @@ A PASS means only that the supplied runs satisfy both declared repeatability
 thresholds. It does not prove run independence, provider authenticity, device
 correctness, reference truth, quantum advantage, or physical fidelity. Small
 expected cells weaken the asymptotic homogeneity test and must be disclosed.
+
+
+## 17. Campaign drift assessment
+
+E7Q may compare two `e7q.replication-report/v1` artifacts for a common
+target. Each report must contain valid pooled counts, total shots, binary
+outcomes of a common width, and at least two outcomes across the comparison.
+The resulting `e7q.drift-report/v1` records pooled probabilities,
+total-variation distance, a two-sample Pearson chi-square homogeneity test,
+explicit thresholds, warnings, and Proof-of-Path evidence.
+
+`NO_DRIFT` means only that both supplied finite-sample distributions satisfy
+the declared thresholds. `DRIFT` means at least one threshold fails. Neither
+status authenticates collection time or provider, identifies a cause, proves
+device stability, or establishes physical fidelity. Low expected cells weaken
+the asymptotic test and must be disclosed.
