@@ -93,6 +93,15 @@ def _required(pattern: str, source: str, label: str) -> re.Match[str]:
     return match
 
 
+def _exactly_one(pattern: str, source: str, label: str) -> re.Match[str]:
+    matches = list(re.finditer(pattern, source, re.S))
+    if not matches:
+        raise E7QError(f"missing or invalid {label}")
+    if len(matches) != 1:
+        raise E7QError(f"duplicate {label}")
+    return matches[0]
+
+
 _TOP_LEVEL_DECLARATION = re.compile(
     r"""
     context\s+\w+\s*\{.*?\}
@@ -130,7 +139,10 @@ def _parse_settings(source: str) -> dict[str, str]:
         if source[cursor:match.start()].strip():
             fragment = source[cursor:match.start()].strip().splitlines()[0]
             raise E7QError(f"invalid context setting: {fragment}")
-        settings[match.group(1)] = match.group(2)
+        key = match.group(1)
+        if key in settings:
+            raise E7QError(f"duplicate context setting: {key}")
+        settings[key] = match.group(2)
         cursor = match.end()
     if source[cursor:].strip():
         fragment = source[cursor:].strip().splitlines()[0]
@@ -142,7 +154,7 @@ def parse(source: str) -> Program:
     """Parse E7Q source, including partial measurement and classical control."""
     text = _strip_comments(source)
     _validate_complete_source(text)
-    context = _required(r"context\s+(\w+)\s*\{(.*?)\}", text, "context")
+    context = _exactly_one(r"context\s+(\w+)\s*\{(.*?)\}", text, "context declaration")
     settings = _parse_settings(context.group(2))
     try:
         shots = int(settings.get("shots", "1024"))
@@ -158,18 +170,26 @@ def parse(source: str) -> Program:
     except ValueError as exc:
         raise E7QError("seed must be an integer") from exc
 
-    qreg = _required(r"(?m)^\s*qubits\s+(\w+)\[(\d+)\]", text, "qubit register")
-    breg = _required(r"(?m)^\s*bits\s+(\w+)\[(\d+)\]", text, "bit register")
+    qreg = _exactly_one(
+        r"(?m)^\s*qubits\s+(\w+)\[(\d+)\]", text, "qubit register declaration"
+    )
+    breg = _exactly_one(
+        r"(?m)^\s*bits\s+(\w+)\[(\d+)\]", text, "bit register declaration"
+    )
     qname, qubits = qreg.group(1), int(qreg.group(2))
     bname, bits = breg.group(1), int(breg.group(2))
     if qubits < 1 or bits < 1:
         raise E7QError("register sizes must be positive")
 
-    verify_match = _required(r"verify\s+(\w+)", text, "verify declaration")
-    path_blocks = {
-        match.group(1): match.group(2)
-        for match in re.finditer(r"path\s+(\w+)\s*\{(.*?)\}", text, re.S)
-    }
+    verify_match = _exactly_one(r"verify\s+(\w+)", text, "verify declaration")
+    path_blocks: dict[str, str] = {}
+    for match in re.finditer(r"path\s+(\w+)\s*\{(.*?)\}", text, re.S):
+        name = match.group(1)
+        if name in path_blocks:
+            raise E7QError(f"duplicate path declaration: {name}")
+        path_blocks[name] = match.group(2)
+    if not path_blocks:
+        raise E7QError("missing or invalid path declaration")
     path = verify_match.group(1)
     if path not in path_blocks:
         raise E7QError("verify target does not match declared path")
@@ -283,8 +303,16 @@ def parse(source: str) -> Program:
                 "densitymatrix noise currently requires terminal full-register measurement"
             )
 
-    require_normalized = bool(re.search(r"invariant\s+normalized\b", text))
-    outcomes = re.search(r"invariant\s+outcomes\s+in\s*\{([^}]+)\}", text)
+    normalized = list(re.finditer(r"invariant\s+normalized\b", text))
+    if len(normalized) > 1:
+        raise E7QError("duplicate normalized invariant")
+    require_normalized = bool(normalized)
+    outcome_invariants = list(
+        re.finditer(r"invariant\s+outcomes\s+in\s*\{([^}]+)\}", text)
+    )
+    if len(outcome_invariants) > 1:
+        raise E7QError("duplicate outcomes invariant")
+    outcomes = outcome_invariants[0] if outcome_invariants else None
     allowed = None
     if outcomes:
         allowed = frozenset(item.strip() for item in outcomes.group(1).split(","))

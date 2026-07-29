@@ -82,3 +82,68 @@ def test_comments_and_whitespace_remain_permitted():
         + "\n# trailing comment\n"
     )
     assert parse(source).name == load(BELL).name
+
+
+@pytest.mark.parametrize(
+    "mutation,message",
+    [
+        (
+            lambda text: text.replace(
+                "qubits q[2]", "context Other { shots: 1 }\nqubits q[2]", 1
+            ),
+            "duplicate context declaration",
+        ),
+        (
+            lambda text: text.replace("qubits q[2]", "qubits other[1]\nqubits q[2]", 1),
+            "duplicate qubit register declaration",
+        ),
+        (
+            lambda text: text.replace("bits c[2]", "bits other[1]\nbits c[2]", 1),
+            "duplicate bit register declaration",
+        ),
+        (
+            lambda text: text + "\nverify CreateBellPair\n",
+            "duplicate verify declaration",
+        ),
+        (
+            lambda text: text.replace(
+                "path CreateBellPair {",
+                "path CreateBellPair { measure q -> c }\npath CreateBellPair {",
+                1,
+            ),
+            "duplicate path declaration: CreateBellPair",
+        ),
+        (
+            lambda text: text.replace("shots: 1000", "shots: 1000\nshots: 2", 1),
+            "duplicate context setting: shots",
+        ),
+        (
+            lambda text: text.replace(
+                "invariant normalized",
+                "invariant normalized\ninvariant normalized",
+                1,
+            ),
+            "duplicate normalized invariant",
+        ),
+        (
+            lambda text: text.replace(
+                "invariant outcomes in {00, 11}",
+                "invariant outcomes in {00, 11}\ninvariant outcomes in {00}",
+                1,
+            ),
+            "duplicate outcomes invariant",
+        ),
+    ],
+)
+def test_duplicate_declarations_are_rejected(mutation, message):
+    with pytest.raises(E7QError, match=message):
+        parse(mutation(BELL.read_text(encoding="utf-8")))
+
+
+def test_distinct_reusable_paths_remain_permitted():
+    source = BELL.read_text(encoding="utf-8").replace(
+        "path CreateBellPair {",
+        "path Prepare { H q[0] }\n\npath CreateBellPair {\n  use Prepare",
+        1,
+    )
+    assert parse(source).subpaths == ("Prepare",)
