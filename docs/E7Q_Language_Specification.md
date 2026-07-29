@@ -1,6 +1,6 @@
 # E7Q Language Specification
 
-**Version:** 0.9.0-dev
+**Version:** 0.10.0-dev
 **Status:** experimental draft
 **Documentation licence:** CC-BY-SA-4.0
 
@@ -133,3 +133,16 @@ queue time, monetary cost, device calibration, execution success, or fidelity.
 Planning conformance requires deterministic estimates, serialization of gates
 sharing a qubit, parallel eligibility for disjoint gates, terminal-measurement
 barriers, and a machine-readable boundary statement.
+
+## 11. Calibration snapshots and target selection
+
+A calibration snapshot is a user-supplied, timestamped document declaring
+target availability, qubit capacity, topology, native gates, queue depth, and
+aggregate single-qubit, two-qubit, and readout error rates. E7Q validates the
+snapshot, rejects incompatible targets, topology-compiles each viable target,
+and ranks candidates using a documented success proxy.
+
+Selection evidence must distinguish supplied observations from calculated
+estimates and include rejected-target reasons. A selection is advisory: it
+does not establish live calibration, vendor authenticity, execution cost,
+queue time at submission, or physical fidelity.
