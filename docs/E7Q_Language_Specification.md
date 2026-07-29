@@ -1,6 +1,6 @@
 # E7Q Language Specification
 
-**Version:** 0.7.0-dev
+**Version:** 0.8.0-dev
 **Status:** experimental draft
 **Documentation licence:** CC-BY-SA-4.0
 
@@ -97,6 +97,13 @@ control semantics. The compilation report records the physical path, inserted
 SWAP count, capability assumptions, and boundary between compilation evidence
 and physical execution.
 
+Vendor adapters translate supported static E7Q programs into dependency-free
+Python source for IBM Qiskit or Google Cirq. They accept the core gate set and
+terminal full-register measurement. Noise, assertions, partial measurement,
+and classical control are rejected explicitly. Adapter evidence identifies the
+target and operation count, and does not imply SDK installation, job submission,
+device calibration, execution, or fidelity.
+
 ## 9. Conformance
 
 A v0.5 implementation must retain Bell and equivalence behaviour, execute the
@@ -110,3 +117,6 @@ noise on the state-vector backend.
 Topology conformance requires rejection of disconnected coupling graphs and
 unsupported native gates, semantics preservation after routing, and an
 auditable compilation trace. It does not imply hardware fidelity.
+Vendor-adapter conformance requires syntactically valid Python output, complete
+static gate and measurement coverage, Proof-of-Path evidence, and explicit
+rejection of unsupported program features.
