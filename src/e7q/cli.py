@@ -9,6 +9,7 @@ import sys
 
 from .adapters import adapt, adapter_result
 from .calibration import load_snapshot, select_target
+from .ingestion import load_vendor_export
 from .language import (
     E7QError, backend_profile, compare, comparison_result, compilation_result,
     compile_topology, load, openqasm, proof_json, run, topology_edges, verify,
@@ -49,6 +50,11 @@ def _parser() -> argparse.ArgumentParser:
     compare_command.add_argument("--proof", type=Path)
     capabilities = commands.add_parser("capabilities")
     capabilities.add_argument("source")
+    ingest = commands.add_parser("ingest-calibration")
+    ingest.add_argument("source", type=Path)
+    ingest.add_argument("--provider", choices=["ibm", "google"], required=True)
+    ingest.add_argument("--max-age-hours", type=float)
+    ingest.add_argument("-o", "--output", required=True, type=Path)
     select = commands.add_parser("select")
     select.add_argument("source")
     select.add_argument("--snapshot", required=True, type=Path)
@@ -75,6 +81,15 @@ def _parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     try:
+        if args.command == "ingest-calibration":
+            result = load_vendor_export(
+                args.source, args.provider, max_age_hours=args.max_age_hours
+            )
+            args.output.write_text(
+                json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+            )
+            print(f"Calibration snapshot: {args.output}")
+            return 0
         if args.command == "compare":
             comparison = compare(
                 load(args.first), load(args.second), args.criterion, args.tolerance
