@@ -50,9 +50,13 @@ def validate_artifact(value: dict[str, Any]) -> dict[str, object]:
             "passed": isinstance(proof, list) and bool(proof),
         })
     passed = all(bool(check["passed"]) for check in checks)
+    status = "PASS" if passed else "FAIL"
+    conformance = "STRUCTURALLY_CONFORMANT" if passed else "NONCONFORMANT"
     return {
         "schema": "e7q.conformance-report/v1",
-        "status": "PASS" if passed else "FAIL",
+        "status": status,
+        "conformance": conformance,
+        "validation_scope": "structure-only",
         "artifact_schema": schema,
         "checks": checks,
         "proof": [
@@ -65,7 +69,8 @@ def validate_artifact(value: dict[str, Any]) -> dict[str, object]:
             {
                 "step": 1,
                 "kind": "conformance-decision",
-                "status": "PASS" if passed else "FAIL",
+                "status": status,
+                "conformance": conformance,
             },
             {
                 "step": 2,
