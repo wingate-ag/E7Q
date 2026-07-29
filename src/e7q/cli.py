@@ -102,7 +102,7 @@ def main(argv: list[str] | None = None) -> int:
                 load(args.source), source, load_snapshot(args.snapshot), shots=args.shots
             )
             args.output.write_text(
-                json.dumps(result, indent=2, sort_keys=True) + "\\n", encoding="utf-8"
+                json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8"
             )
             print(f"Execution bundle: {args.output}")
             return 0
