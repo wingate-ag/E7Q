@@ -60,6 +60,15 @@ class Comparison:
     proof: tuple[dict[str, object], ...]
 
 
+@dataclass(frozen=True)
+class Compilation:
+    program: Program
+    topology: tuple[tuple[int, int], ...]
+    native_gates: frozenset[str]
+    inserted_swaps: int
+    proof: tuple[dict[str, object], ...]
+
+
 _ONE_QUBIT = {
     "X": np.array([[0, 1], [1, 0]], complex),
     "Y": np.array([[0, -1j], [1j, 0]], complex),
@@ -70,6 +79,7 @@ _ONE_QUBIT = {
 }
 _TWO_QUBIT = {"CX", "CZ", "SWAP"}
 _NOISE_CHANNELS = {"bit_flip", "phase_flip", "depolarizing"}
+_EXECUTABLE_GATES = frozenset(_ONE_QUBIT) | _TWO_QUBIT
 
 
 def _strip_comments(source: str) -> str:
@@ -669,6 +679,132 @@ def comparison_result(comparison: Comparison) -> dict[str, object]:
             if comparison.global_phase is not None else None
         ),
         "proof": list(comparison.proof),
+    }
+
+
+def topology_edges(qubits: int, topology: str) -> tuple[tuple[int, int], ...]:
+    """Build a named undirected coupling topology."""
+    if qubits < 1:
+        raise E7QError("topology requires at least one qubit")
+    if topology == "linear":
+        return tuple((index, index + 1) for index in range(qubits - 1))
+    if topology == "ring":
+        edges = list((index, index + 1) for index in range(qubits - 1))
+        if qubits > 2:
+            edges.append((qubits - 1, 0))
+        return tuple(edges)
+    if topology == "all-to-all":
+        return tuple(
+            (first, second)
+            for first in range(qubits)
+            for second in range(first + 1, qubits)
+        )
+    raise E7QError(f"unknown topology: {topology}")
+
+
+def _shortest_path(
+    start: int, goal: int, qubits: int, edges: tuple[tuple[int, int], ...]
+) -> tuple[int, ...]:
+    adjacency = {index: set() for index in range(qubits)}
+    for first, second in edges:
+        if first == second or not (0 <= first < qubits and 0 <= second < qubits):
+            raise E7QError("coupling edges must join distinct in-range qubits")
+        adjacency[first].add(second)
+        adjacency[second].add(first)
+    queue: list[tuple[int, ...]] = [(start,)]
+    visited = {start}
+    while queue:
+        path = queue.pop(0)
+        if path[-1] == goal:
+            return path
+        for neighbor in sorted(adjacency[path[-1]]):
+            if neighbor not in visited:
+                visited.add(neighbor)
+                queue.append(path + (neighbor,))
+    raise E7QError(f"no coupling path between qubits {start} and {goal}")
+
+
+def compile_topology(
+    program: Program,
+    edges: tuple[tuple[int, int], ...],
+    native_gates: frozenset[str] = _EXECUTABLE_GATES,
+) -> Compilation:
+    """Route two-qubit gates onto an undirected coupling graph."""
+    unknown = native_gates - _EXECUTABLE_GATES
+    if unknown:
+        raise E7QError(f"unknown native gates: {', '.join(sorted(unknown))}")
+    routed: list[Operation] = []
+    proof: list[dict[str, object]] = [{
+        "step": 0,
+        "kind": "compile",
+        "backend": "topology-reference",
+        "logical_qubits": program.qubits,
+        "coupling_edges": [list(edge) for edge in edges],
+        "native_gates": sorted(native_gates),
+        "boundary": "Compilation trace only; no physical execution or fidelity is implied.",
+    }]
+    inserted = 0
+    for source_step, operation in enumerate(program.operations, start=1):
+        if operation.gate not in _EXECUTABLE_GATES:
+            routed.append(operation)
+            continue
+        if operation.gate not in native_gates:
+            raise E7QError(f"backend does not support native gate {operation.gate}")
+        if operation.gate not in _TWO_QUBIT:
+            routed.append(operation)
+            continue
+        path = _shortest_path(
+            operation.qubits[0], operation.qubits[1], program.qubits, edges
+        )
+        swaps = tuple(zip(path[:-2], path[1:-1]))
+        if swaps and "SWAP" not in native_gates:
+            raise E7QError("routing a non-adjacent gate requires native SWAP")
+        for pair in swaps:
+            routed.append(Operation("SWAP", pair))
+        routed.append(Operation(
+            operation.gate, (path[-2], path[-1]), operation.bits,
+            operation.condition, operation.full_register, operation.label,
+            operation.probability,
+        ))
+        for pair in reversed(swaps):
+            routed.append(Operation("SWAP", pair))
+        inserted += 2 * len(swaps)
+        proof.append({
+            "step": len(proof),
+            "kind": "route",
+            "source_step": source_step,
+            "operator": operation.gate,
+            "logical_qubits": list(operation.qubits),
+            "physical_path": list(path),
+            "inserted_swaps": 2 * len(swaps),
+            "layout_restored": True,
+        })
+    compiled = Program(
+        program.name, program.shots, program.backend, program.seed,
+        program.qubits, program.bits, program.path, tuple(routed),
+        program.allowed_outcomes, program.require_normalized, program.subpaths,
+    )
+    proof.append({
+        "step": len(proof),
+        "kind": "compilation-result",
+        "source_operations": len(program.operations),
+        "compiled_operations": len(routed),
+        "inserted_swaps": inserted,
+        "layout_restored": True,
+    })
+    return Compilation(compiled, edges, native_gates, inserted, tuple(proof))
+
+
+def compilation_result(compilation: Compilation) -> dict[str, object]:
+    return {
+        "status": "PASS",
+        "backend": "topology-reference",
+        "inserted_swaps": compilation.inserted_swaps,
+        "source_operations": int(compilation.proof[-1]["source_operations"]),
+        "compiled_operations": int(compilation.proof[-1]["compiled_operations"]),
+        "topology": [list(edge) for edge in compilation.topology],
+        "native_gates": sorted(compilation.native_gates),
+        "proof": list(compilation.proof),
     }
 
 

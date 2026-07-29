@@ -1,0 +1,19 @@
+context NonlocalCX {
+  shots: 512
+  backend: statevector
+  seed: 17
+}
+
+qubits q[3]
+bits c[3]
+
+invariant normalized
+invariant outcomes in {000, 101}
+
+path RoutedEntanglement {
+  H q[0]
+  CX q[0], q[2]
+  measure q -> c
+}
+
+verify RoutedEntanglement

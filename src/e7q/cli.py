@@ -8,8 +8,8 @@ from pathlib import Path
 import sys
 
 from .language import (
-    E7QError, backend_profile, compare, comparison_result, load, openqasm,
-    proof_json, run, verify,
+    E7QError, backend_profile, compare, comparison_result, compilation_result,
+    compile_topology, load, openqasm, proof_json, run, topology_edges, verify,
 )
 
 
@@ -39,6 +39,18 @@ def _parser() -> argparse.ArgumentParser:
     compare_command.add_argument("--proof", type=Path)
     capabilities = commands.add_parser("capabilities")
     capabilities.add_argument("source")
+    compile_command = commands.add_parser("compile")
+    compile_command.add_argument("source")
+    compile_command.add_argument(
+        "--topology", choices=["linear", "ring", "all-to-all"], default="linear"
+    )
+    compile_command.add_argument(
+        "--native-gates",
+        default="X,Y,Z,H,S,T,CX,CZ,SWAP",
+        help="comma-separated native gate set",
+    )
+    compile_command.add_argument("-o", "--output", type=Path)
+    compile_command.add_argument("--proof", type=Path)
     return parser
 
 
@@ -60,6 +72,26 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"Proof-of-Path: {args.proof}")
             return 0 if comparison.equivalent else 1
         program = load(args.source)
+        if args.command == "compile":
+            native = frozenset(
+                item.strip().upper()
+                for item in args.native_gates.split(",")
+                if item.strip()
+            )
+            compilation = compile_topology(
+                program, topology_edges(program.qubits, args.topology), native
+            )
+            content = openqasm(compilation.program)
+            if args.output:
+                args.output.write_text(content, encoding="utf-8")
+            else:
+                print(content, end="")
+            if args.proof:
+                args.proof.write_text(
+                    proof_json(compilation_result(compilation)), encoding="utf-8"
+                )
+                print(f"Proof-of-Path: {args.proof}", file=sys.stderr)
+            return 0
         if args.command == "capabilities":
             print(json.dumps(backend_profile(program), indent=2, sort_keys=True))
             return 0
