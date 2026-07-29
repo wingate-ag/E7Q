@@ -139,3 +139,13 @@
 - [x] deterministic replication Proof-of-Path and CLI integration;
 - [x] explicit offline, independence, authenticity, and fidelity boundary;
 - [ ] provider-authenticated campaign retrieval and run independence attestation.
+
+## v0.16 — Campaign drift assessment
+
+- [x] common-target and outcome-space validation;
+- [x] pooled-distribution total-variation comparison;
+- [x] two-sample chi-square homogeneity evidence;
+- [x] configurable drift thresholds and low-cell warnings;
+- [x] deterministic drift Proof-of-Path and CLI integration;
+- [x] explicit chronology, causality, authenticity, stability, and fidelity boundary;
+- [ ] provider-authenticated longitudinal retrieval and causal diagnostics.
