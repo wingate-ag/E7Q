@@ -109,3 +109,12 @@
 - [x] CLI integration and regression tests;
 - [ ] credential-dependent live vendor retrieval;
 - [ ] credential-dependent hardware submission.
+
+## v0.13 — Execution-result receipts
+
+- [x] provider-neutral supplied-result schema;
+- [x] strict bundle, target, shot, and count linkage validation;
+- [x] deterministic receipt with empirical probabilities and input digests;
+- [x] Proof-of-Path provenance and evidence boundary;
+- [x] CLI integration, documentation, and regression tests;
+- [ ] credential-dependent provider authentication and hardware submission.
