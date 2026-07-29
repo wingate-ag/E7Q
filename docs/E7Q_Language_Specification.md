@@ -1,6 +1,6 @@
 # E7Q Language Specification
 
-**Version:** 0.13.0-dev
+**Version:** 0.14.0-dev
 **Status:** experimental draft
 **Documentation licence:** CC-BY-SA-4.0
 
@@ -187,3 +187,18 @@ Receipt conformance establishes internal consistency of the supplied files
 only. It does not authenticate the provider, prove that E7Q submitted or
 witnessed the job, establish live calibration, or claim cost or physical
 fidelity.
+
+
+## 15. Statistical result assessment
+
+E7Q may assess an `e7q.execution-receipt/v1` against a supplied
+`e7q.reference-distribution/v1`. The reference must assign non-negative
+probabilities summing to one and declare a maximum total-variation distance
+and significance level. The assessment reports total-variation distance,
+Pearson's chi-square statistic, degrees of freedom, and an asymptotic p-value.
+
+A PASS means only that the supplied empirical distribution satisfies both
+declared thresholds for this finite sample. It does not prove the reference
+model, provider authenticity, device correctness, quantum advantage, or
+physical fidelity. Small expected cell counts weaken the chi-square
+approximation and must be disclosed in the report.
