@@ -149,3 +149,12 @@
 - [x] deterministic drift Proof-of-Path and CLI integration;
 - [x] explicit chronology, causality, authenticity, stability, and fidelity boundary;
 - [ ] provider-authenticated longitudinal retrieval and causal diagnostics.
+
+## v0.17 — Longitudinal trend assessment
+
+- [x] baseline-relative assessment across three or more supplied campaigns;
+- [x] common-target and outcome-space validation;
+- [x] Bonferroni control for repeated significance tests;
+- [x] first-breach detection and deterministic trend Proof-of-Path;
+- [x] explicit ordering, chronology, causality, authenticity, stability, and fidelity boundary;
+- [ ] provider-authenticated scheduled monitoring and causal diagnostics.
