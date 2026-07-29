@@ -50,3 +50,35 @@ def test_openqasm_export():
 def test_invalid_programs_are_rejected(mutation, message):
     with pytest.raises(E7QError, match=message):
         parse(mutation(BELL.read_text(encoding="utf-8")))
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        lambda text: "unknown top-level declaration\n" + text,
+        lambda text: text + "\nunknown trailing declaration\n",
+        lambda text: text.replace(
+            "qubits q[2]", "qubits q[2]\nunknown between declarations", 1
+        ),
+    ],
+)
+def test_unconsumed_non_comment_input_is_rejected(mutation):
+    with pytest.raises(E7QError, match="unrecognized top-level input"):
+        parse(mutation(BELL.read_text(encoding="utf-8")))
+
+
+def test_unconsumed_context_input_is_rejected():
+    source = BELL.read_text(encoding="utf-8").replace(
+        "backend: statevector", "backend: statevector\nmalformed setting", 1
+    )
+    with pytest.raises(E7QError, match="invalid context setting"):
+        parse(source)
+
+
+def test_comments_and_whitespace_remain_permitted():
+    source = (
+        "// leading comment\n\n"
+        + BELL.read_text(encoding="utf-8")
+        + "\n# trailing comment\n"
+    )
+    assert parse(source).name == load(BELL).name
