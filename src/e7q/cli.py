@@ -195,7 +195,7 @@ def main(argv: list[str] | None = None) -> int:
             return 0 if report["status"] == "NO_TREND_DETECTED" else 1
         if args.command == "validate-artifact":
             report = validate_artifact(load_artifact(args.source))
-            content = json.dumps(report, indent=2, sort_keys=True) + "\\n"
+            content = json.dumps(report, indent=2, sort_keys=True) + "\n"
             if args.output:
                 args.output.write_text(content, encoding="utf-8")
                 print(f"Conformance report: {args.output}")
