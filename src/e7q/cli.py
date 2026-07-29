@@ -16,6 +16,7 @@ from .language import (
     compile_topology, load, openqasm, proof_json, run, topology_edges, verify,
 )
 from .planning import plan, plan_result
+from .results import build_execution_receipt, load_execution_bundle, load_execution_result
 
 
 def _native_gates(value: str) -> frozenset[str]:
@@ -61,6 +62,10 @@ def _parser() -> argparse.ArgumentParser:
     bundle.add_argument("--snapshot", required=True, type=Path)
     bundle.add_argument("--shots", type=int, default=1000)
     bundle.add_argument("-o", "--output", required=True, type=Path)
+    receipt = commands.add_parser("receipt")
+    receipt.add_argument("bundle", type=Path)
+    receipt.add_argument("--result", required=True, type=Path)
+    receipt.add_argument("-o", "--output", required=True, type=Path)
     select = commands.add_parser("select")
     select.add_argument("source")
     select.add_argument("--snapshot", required=True, type=Path)
@@ -105,6 +110,17 @@ def main(argv: list[str] | None = None) -> int:
                 json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8"
             )
             print(f"Execution bundle: {args.output}")
+            return 0
+        if args.command == "receipt":
+            bundle_value, bundle_bytes = load_execution_bundle(args.bundle)
+            result_value, result_bytes = load_execution_result(args.result)
+            receipt = build_execution_receipt(
+                bundle_value, bundle_bytes, result_value, result_bytes
+            )
+            args.output.write_text(
+                json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+            )
+            print(f"Execution receipt: {args.output}")
             return 0
         if args.command == "compare":
             comparison = compare(
