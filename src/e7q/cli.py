@@ -185,7 +185,7 @@ def main(argv: list[str] | None = None) -> int:
                 significance_level=args.significance_level,
             )
             args.output.write_text(
-                json.dumps(report, indent=2, sort_keys=True) + "\\n", encoding="utf-8"
+                json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
             )
             print(f"Trend report: {args.output}")
             return 0 if report["status"] == "NO_TREND_DETECTED" else 1
