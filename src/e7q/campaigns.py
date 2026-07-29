@@ -74,11 +74,15 @@ def assess_replication(
         outcomes.update(clean)
         normalized.append({"index": index, "shots": shots, "counts": clean, "result_digest": digest})
 
-    ordered = sorted(outcomes)
+    total_shots = sum(run["shots"] for run in normalized)
+    pooled_counts = {
+        outcome: sum(run["counts"].get(outcome, 0) for run in normalized)
+        for outcome in sorted(outcomes)
+    }
+    ordered = [outcome for outcome, count in pooled_counts.items() if count > 0]
+    pooled_counts = {outcome: pooled_counts[outcome] for outcome in ordered}
     if len(ordered) < 2:
         raise E7QError("replication requires at least two observed outcomes")
-    total_shots = sum(run["shots"] for run in normalized)
-    pooled_counts = {outcome: sum(run["counts"].get(outcome, 0) for run in normalized) for outcome in ordered}
     pooled = {outcome: pooled_counts[outcome] / total_shots for outcome in ordered}
     run_probabilities = [
         {outcome: run["counts"].get(outcome, 0) / run["shots"] for outcome in ordered}
