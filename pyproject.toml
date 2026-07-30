@@ -9,7 +9,10 @@ description = "Experimental invariant-aware quantum programming and verification
 requires-python = ">=3.11"
 dependencies = ["numpy>=1.26"]
 license = {text = "Apache-2.0"}
-authors = [{name = "Alexander Gregory Wingate"}]
+authors = [
+  {name = "Alexander Gregory Wingate"},
+  {name = "Oleksandr Razinkov"},
+]
 
 [project.scripts]
 e7q = "e7q.cli:main"

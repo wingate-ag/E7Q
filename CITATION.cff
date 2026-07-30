@@ -5,6 +5,8 @@ type: software
 authors:
   - family-names: Wingate
     given-names: Alexander Gregory
+  - family-names: Razinkov
+    given-names: Oleksandr
 license: Apache-2.0
 repository-code: "https://github.com/wingate-ag/E7Q"
 version: 0.1.0-dev
