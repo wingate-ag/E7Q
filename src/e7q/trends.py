@@ -7,6 +7,7 @@ from typing import Any, Iterable
 
 from .drift import assess_drift, load_replication_report
 from .language import E7QError
+from .temporal import temporal_evidence
 
 
 def load_trend_reports(paths: Iterable[str | Path]) -> list[dict[str, Any]]:
@@ -75,5 +76,37 @@ def assess_trend(
         "significance_level": float(significance_level),
         "adjusted_significance_level": adjusted,
         "multiplicity_method": "bonferroni",
+        "temporal_evidence": temporal_evidence(
+            carrier="TD2",
+            carrier_description="ordered family of supplied campaign histories",
+            order_relation="user-supplied sequence with baseline-relative comparisons",
+            chronology_status="declared-not-authenticated",
+            projection_from="ordered replication-report family",
+            projection_to="baseline-relative longitudinal trend report",
+            preserves=[
+                "supplied order",
+                "campaign identity",
+                "first declared threshold breach",
+            ],
+            loses=[
+                "authenticated chronology and elapsed time",
+                "unobserved intermediate campaigns",
+                "causal explanation",
+            ],
+            reconstruction_status="non-unique",
+            reconstruction_limit=(
+                "The supplied series does not determine unobserved intervals "
+                "or a unique causal history."
+            ),
+            criterion=(
+                f"baseline-relative TVD <= {float(max_total_variation)} and "
+                f"Bonferroni-adjusted p-value >= {adjusted}"
+            ),
+            phase=status,
+            boundary_crossing={
+                "detected": first_breach is not None,
+                "first_index": first_breach,
+            },
+        ),
         "proof": proof,
     }

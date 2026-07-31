@@ -27,6 +27,8 @@ def test_trend_reports_no_breach_for_consistent_series():
     assert result["status"] == "NO_TREND_DETECTED"
     assert result["adjusted_significance_level"] == pytest.approx(0.025)
     assert result["first_breach_index"] is None
+    assert result["temporal_evidence"]["carrier"] == "TD2"
+    assert result["temporal_evidence"]["boundary_crossing"]["detected"] is False
 
 
 def test_trend_identifies_first_baseline_relative_breach():
@@ -39,6 +41,7 @@ def test_trend_identifies_first_baseline_relative_breach():
     assert result["status"] == "TREND_DETECTED"
     assert result["first_breach_index"] == 2
     assert result["series"][1]["drift_detected"] is True
+    assert result["temporal_evidence"]["boundary_crossing"]["first_index"] == 2
 
 
 def test_trend_requires_three_compatible_campaigns():

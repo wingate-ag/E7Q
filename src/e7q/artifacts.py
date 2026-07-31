@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from .language import E7QError
+from .temporal import conformance_checks
 
 
 _REQUIREMENTS: dict[str, tuple[str, ...]] = {
@@ -49,6 +50,8 @@ def validate_artifact(value: dict[str, Any]) -> dict[str, object]:
             "name": "proof-sequence",
             "passed": isinstance(proof, list) and bool(proof),
         })
+    if "temporal_evidence" in value:
+        checks.extend(conformance_checks(value["temporal_evidence"]))
     passed = all(bool(check["passed"]) for check in checks)
     status = "PASS" if passed else "FAIL"
     conformance = "STRUCTURALLY_CONFORMANT" if passed else "NONCONFORMANT"

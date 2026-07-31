@@ -9,6 +9,7 @@ from typing import Any
 from .calibration import select_target
 from .language import E7QError, Program, openqasm
 from .planning import plan, plan_result
+from .temporal import temporal_evidence
 
 
 def _digest(value: bytes) -> str:
@@ -84,6 +85,37 @@ def build_execution_bundle(
         "target": selected_name,
         "shots": shots,
         "captured_at": snapshot["captured_at"],
+        "temporal_evidence": temporal_evidence(
+            carrier="TD1",
+            carrier_description="ordered preparation and offline handoff path",
+            order_relation="Proof-of-Path step order",
+            chronology_status="proof-order-only",
+            projection_from="program plus supplied calibration snapshot",
+            projection_to="routed offline execution bundle",
+            preserves=[
+                "program and snapshot digests",
+                "target-selection decision",
+                "compilation and handoff order",
+            ],
+            loses=[
+                "runtime queue history",
+                "submission and execution events",
+                "physical-device state evolution",
+            ],
+            reconstruction_status="partial",
+            reconstruction_limit=(
+                "The bundle identifies inputs by digest but does not contain "
+                "submission or physical execution history."
+            ),
+            clock={
+                "field": "captured_at",
+                "value": snapshot["captured_at"],
+                "status": "declared-not-authenticated",
+            },
+            criterion="offline handoff readiness",
+            phase="READY",
+            boundary_crossing={"detected": False},
+        ),
         "source_digest": _digest(source),
         "snapshot_digest": _digest(snapshot_bytes),
         "openqasm": qasm,

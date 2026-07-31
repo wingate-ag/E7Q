@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from .language import E7QError
+from .temporal import temporal_evidence
 
 
 def _digest(value: bytes) -> str:
@@ -125,6 +126,37 @@ def build_execution_receipt(
         "target": result["target"],
         "shots": shots,
         "completed_at": result["completed_at"],
+        "temporal_evidence": temporal_evidence(
+            carrier="TD0",
+            carrier_description="one provider-reported execution-result event",
+            order_relation="single reported completion point",
+            chronology_status="provider-reported-not-authenticated",
+            projection_from="user-supplied provider result",
+            projection_to="normalized E7Q execution receipt",
+            preserves=[
+                "reported completion time",
+                "bundle and result linkage",
+                "counts and empirical probabilities",
+            ],
+            loses=[
+                "shot-level ordering and timing",
+                "intermediate quantum states",
+                "provider-authenticated chronology",
+            ],
+            reconstruction_status="non-unique",
+            reconstruction_limit=(
+                "Multiple shot sequences and device histories can produce the "
+                "same aggregate counts."
+            ),
+            clock={
+                "field": "completed_at",
+                "value": result["completed_at"],
+                "status": "provider-reported-not-authenticated",
+            },
+            criterion="bundle linkage and count consistency",
+            phase="PASS",
+            boundary_crossing={"detected": False},
+        ),
         "counts": dict(sorted(normalized.items())),
         "probabilities": probabilities,
         "proof": proof,

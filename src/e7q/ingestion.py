@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from .language import E7QError
+from .temporal import temporal_evidence
 
 
 _SCHEMAS = {
@@ -96,6 +97,11 @@ def ingest_vendor_export(
     if payload.get("schema") != _SCHEMAS[provider]:
         raise E7QError(f"{provider} export must use {_SCHEMAS[provider]}")
     captured = _timestamp(payload.get("captured_at"), "captured_at")
+    validity_window: dict[str, object] = {
+        "criterion": "maximum age from the supplied reference time",
+        "maximum_age_hours": max_age_hours,
+        "status": "not-evaluated",
+    }
     if max_age_hours is not None:
         if max_age_hours < 0:
             raise E7QError("max_age_hours must be non-negative")
@@ -107,6 +113,12 @@ def ingest_vendor_export(
             raise E7QError(
                 f"vendor export is stale ({age_hours:.1f}h > {max_age_hours:.1f}h)"
             )
+        validity_window.update(
+            {
+                "age_hours": age_hours,
+                "status": "within-window",
+            }
+        )
     raw_targets = payload.get("targets")
     if not isinstance(raw_targets, list) or not raw_targets:
         raise E7QError("vendor export requires at least one target")
@@ -119,6 +131,38 @@ def ingest_vendor_export(
         "schema": "e7q.calibration/v1",
         "captured_at": payload["captured_at"],
         "targets": targets,
+        "temporal_evidence": temporal_evidence(
+            carrier="TD0",
+            carrier_description="one supplied calibration snapshot",
+            order_relation="single temporal observation",
+            chronology_status="format-validated-not-authenticated",
+            projection_from="user-supplied vendor calibration export",
+            projection_to="normalized E7Q calibration snapshot",
+            preserves=[
+                "declared capture timestamp",
+                "provider and source schema",
+                "mapped target observations",
+            ],
+            loses=[
+                "unmapped provider-native fields",
+                "events between calibration snapshots",
+                "provider-authenticated chronology",
+            ],
+            reconstruction_status="non-unique",
+            reconstruction_limit=(
+                "Several provider-native exports can normalize to the same "
+                "E7Q calibration snapshot."
+            ),
+            clock={
+                "field": "captured_at",
+                "value": payload["captured_at"],
+                "status": "format-validated-not-authenticated",
+            },
+            validity_window=validity_window,
+            criterion="declared calibration freshness policy",
+            phase=str(validity_window["status"]),
+            boundary_crossing={"detected": False},
+        ),
         "provenance": {
             "provider": provider,
             "source_schema": _SCHEMAS[provider],

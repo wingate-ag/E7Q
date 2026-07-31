@@ -9,6 +9,7 @@ from typing import Any, Iterable
 
 from .assessment import _gamma_q
 from .language import E7QError
+from .temporal import temporal_evidence
 
 
 def load_replication_receipts(paths: Iterable[str | Path]) -> list[dict[str, Any]]:
@@ -136,5 +137,41 @@ def assess_replication(
         "significance_level": float(significance_level),
         "checks": checks,
         "warnings": (["chi-square homogeneity approximation has expected cells below 5: " + ", ".join(low_expected)] if low_expected else []),
+        "temporal_evidence": temporal_evidence(
+            carrier="TD2",
+            carrier_description="family of supplied execution runs",
+            order_relation="unordered replication family",
+            chronology_status="not-established",
+            projection_from="linked execution receipts",
+            projection_to="pooled replication report",
+            preserves=[
+                "per-run identity",
+                "pairwise distribution distances",
+                "pooled counts",
+            ],
+            loses=[
+                "run chronology",
+                "inter-run device history",
+                "shot-level temporal structure",
+            ],
+            reconstruction_status="non-unique",
+            reconstruction_limit=(
+                "The pooled report does not determine a unique run chronology "
+                "or device trajectory."
+            ),
+            criterion=(
+                f"maximum pairwise TVD <= {float(max_pairwise_tvd)} and "
+                f"homogeneity p-value >= {float(significance_level)}"
+            ),
+            phase=status,
+            boundary_crossing={
+                "detected": status == "FAIL",
+                **(
+                    {"reason": "repeatability threshold breach"}
+                    if status == "FAIL"
+                    else {}
+                ),
+            },
+        ),
         "proof": proof,
     }

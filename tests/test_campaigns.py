@@ -30,6 +30,8 @@ def test_replication_passes_consistent_runs():
     assert result["total_shots"] == 300
     assert result["maximum_pairwise_tvd"] == pytest.approx(0.03)
     assert result["p_value"] > 0.05
+    assert result["temporal_evidence"]["carrier"] == "TD2"
+    assert result["temporal_evidence"]["temporal_phase"]["status"] == "PASS"
 
 
 def test_replication_fails_inconsistent_run():
@@ -42,6 +44,7 @@ def test_replication_fails_inconsistent_run():
         "pairwise_total_variation": False,
         "homogeneity": False,
     }
+    assert result["temporal_evidence"]["boundary_crossing"]["detected"] is True
 
 
 def test_replication_rejects_mismatched_or_duplicate_evidence():

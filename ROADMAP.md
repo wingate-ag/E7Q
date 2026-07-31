@@ -167,3 +167,15 @@
 - [x] explicit offline completion and evidence boundary;
 - [x] credential-free roadmap complete;
 - [ ] optional provider integrations, maintained outside the offline core.
+
+## v1.0rc2 — E7G-T v0.11 temporal alignment
+
+- [x] immutable upstream pin to E7G-T v0.11-UC1;
+- [x] bounded `e7q.temporal-evidence/v1` profile;
+- [x] temporal carrier, order, chronology-status, projection, phase, and
+  boundary-crossing records;
+- [x] temporal evidence in calibration, handoff, receipt, replication, drift,
+  and trend artifacts;
+- [x] structural conformance checks for embedded temporal evidence;
+- [x] explicit boundary against physical-time, chronology-authentication, and
+  many-worlds claims.
