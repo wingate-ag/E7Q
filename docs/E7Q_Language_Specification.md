@@ -1,6 +1,6 @@
 # E7Q Language Specification
 
-**Version:** 1.0.0-rc1
+**Version:** 1.0.0-rc2
 **Status:** experimental draft
 **Documentation licence:** CC-BY-SA-4.0
 
@@ -252,7 +252,65 @@ user declaration, not authenticated chronology. Neither verdict proves
 continuous monitoring, provider authenticity, causation, device stability, or
 physical fidelity.
 
-## 19. Offline artifact conformance
+## 19. Bounded temporal-evidence profile
+
+E7Q implements a bounded quantum-workflow profile of the E7G-T v0.11-UC1
+temporal subkernel. Time is treated as an admitted structure that may be
+extended, ordered, projected, summarized, phase-classified, and checked for
+declared boundary crossings. This profile governs evidence semantics only;
+established quantum mathematics remains normative for execution.
+
+The machine-readable subrecord uses schema `e7q.temporal-evidence/v1` and
+contains:
+
+- `carrier`: an E7G-T temporal order-role such as `TD0`, `TD1`, or `TD2`;
+- `carrier_description`: the concrete artifact or history family being
+  classified;
+- `order_relation`: the actual ordering supported by the artifact;
+- `chronology_status`: whether chronology is absent, declared, format-validated,
+  provider-reported, proof-order-only, or authenticated;
+- `clock`, when applicable: the timestamp field, value, and evidential status;
+- `validity_window`, when evaluated: the declared freshness criterion and
+  result;
+- `projection`: richer temporal source, derived view, preserved structure, and
+  hidden or lost structure;
+- `reconstruction`: whether the richer temporal source is reconstructible from
+  the view and the declared limit of that reconstruction;
+- `temporal_phase`: the criterion and resulting inquiry-relative status;
+- `boundary_crossing`: whether the declared criterion was crossed and, where
+  available, the first supplied index or reason.
+
+The bounded carrier mapping is:
+
+| Carrier | E7Q interpretation |
+| --- | --- |
+| `TD0` | one calibration snapshot, measurement, receipt, or reported event |
+| `TD1` | one ordered execution, compilation, Proof-of-Path, or handoff history |
+| `TD2` | a branch family, replication family, campaign comparison, or longitudinal history family |
+| `TD3`–`TD7` | reserved for future use cases that provide operational definitions and evidence |
+
+Newly generated calibration, execution-bundle, execution-receipt, replication,
+drift, and trend artifacts include the subrecord. Existing v1 artifacts without
+it remain readable. If `temporal_evidence` is present, structural conformance
+must validate its schema, carrier, declared order, chronology status,
+projection, reconstruction, and any supplied clock, phase, or
+boundary-crossing fields. A claim of authenticated chronology must include an
+authentication evidence reference.
+
+Temporal phase means equivalence under a declared operational criterion. It
+does not mean a physical phase of matter. `NO_DRIFT` and
+`NO_TREND_DETECTED` are inquiry-relative statuses over supplied finite data,
+not proofs of temporal stability. File order, Proof-of-Path order,
+provider-reported timestamps, authenticated chronology, elapsed duration, and
+causal order are distinct and must not be silently substituted for one
+another.
+
+This profile does not claim literal additional time dimensions, many-worlds
+branching, a new quantum theory of time, authenticated provider chronology,
+continuous observation, or reconstruction of a unique execution history from
+aggregate counts.
+
+## 20. Offline artifact conformance
 
 E7Q registers the stable offline artifact families produced by calibration
 ingestion, execution handoff, result normalization, statistical assessment,

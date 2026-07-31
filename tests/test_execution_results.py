@@ -42,6 +42,11 @@ def test_receipt_validates_linkage_and_probabilities():
     assert receipt["status"] == "PASS"
     assert receipt["probabilities"] == {"00": 0.48, "11": 0.52}
     assert receipt["proof"][-1]["kind"] == "evidence-boundary"
+    assert receipt["temporal_evidence"]["carrier"] == "TD0"
+    assert (
+        receipt["temporal_evidence"]["clock"]["status"]
+        == "provider-reported-not-authenticated"
+    )
 
 
 def test_rejects_target_and_count_mismatches():

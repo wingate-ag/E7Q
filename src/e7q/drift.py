@@ -8,6 +8,7 @@ from typing import Any
 
 from .assessment import _gamma_q
 from .language import E7QError
+from .temporal import temporal_evidence
 
 
 def load_replication_report(path: str | Path) -> dict[str, Any]:
@@ -109,5 +110,41 @@ def assess_drift(
         "significance_level": float(significance_level),
         "checks": checks,
         "warnings": (["chi-square homogeneity approximation has expected cells below 5: " + ", ".join(low_expected)] if low_expected else []),
+        "temporal_evidence": temporal_evidence(
+            carrier="TD2",
+            carrier_description="declared baseline-candidate campaign pair",
+            order_relation="declared baseline before candidate",
+            chronology_status="declared-not-authenticated",
+            projection_from="two pooled replication campaigns",
+            projection_to="distribution-shift assessment",
+            preserves=[
+                "declared baseline-candidate roles",
+                "pooled distributions",
+                "threshold decision",
+            ],
+            loses=[
+                "authenticated elapsed time",
+                "intermediate device trajectory",
+                "causal explanation",
+            ],
+            reconstruction_status="non-unique",
+            reconstruction_limit=(
+                "The observed shift metrics are compatible with multiple "
+                "intermediate histories and causes."
+            ),
+            criterion=(
+                f"total variation <= {float(max_total_variation)} and "
+                f"homogeneity p-value >= {float(significance_level)}"
+            ),
+            phase=status,
+            boundary_crossing={
+                "detected": drift_detected,
+                **(
+                    {"reason": "declared drift threshold breach"}
+                    if drift_detected
+                    else {}
+                ),
+            },
+        ),
         "proof": proof,
     }

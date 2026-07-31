@@ -42,6 +42,20 @@ def test_unknown_schema_fails():
     assert result["conformance"] == "NONCONFORMANT"
 
 
+def test_invalid_embedded_temporal_evidence_fails():
+    value = trend()
+    value["temporal_evidence"] = {
+        "schema": "e7q.temporal-evidence/v1",
+        "carrier": "TD99",
+    }
+    result = validate_artifact(value)
+    assert result["status"] == "FAIL"
+    assert any(
+        check["name"] == "temporal-evidence:carrier" and not check["passed"]
+        for check in result["checks"]
+    )
+
+
 def test_validate_artifact_cli(tmp_path):
     source = tmp_path / "trend.json"
     output = tmp_path / "conformance.json"

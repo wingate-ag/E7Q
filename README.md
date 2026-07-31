@@ -74,6 +74,8 @@ when you also need to answer:
 - Produces execution bundles for credentialed handoff.
 - Links returned counts to execution receipts.
 - Assesses distributions, replication, campaign drift, and longitudinal trends.
+- Records temporal carrier, ordering, projection loss, phase criteria, and
+  boundary crossings in machine-readable evidence.
 - Validates the structure of registered E7Q artifacts.
 
 ## What E7Q does not establish
@@ -154,6 +156,8 @@ only when the registered schema and required top-level evidence are present.
 
 - [Quickstart](docs/QUICKSTART.md)
 - [Language specification](docs/E7Q_Language_Specification.md)
+- [E7G-T to E7Q mapping](docs/E7GT_Quantum_Mapping.md)
+- [Temporal-evidence profile](docs/TEMPORAL_EVIDENCE_PROFILE.md)
 - [Roadmap](ROADMAP.md)
 - [Offline completion boundary](docs/MILESTONE_18.md)
 - [E7G-T upstream relationship](references/E7GT_UPSTREAM.md)
@@ -164,9 +168,10 @@ and detailed usage of each capability.
 ## Relationship to E7G-T
 
 E7Q is a downstream implementation of E7G-T's invariant, transformation,
-projection, measurement-accountability, and Proof-of-Path principles. The
-canonical E7G-T kernel remains a separate upstream project and is not silently
-modified by E7Q.
+projection, measurement-accountability, temporal-geometry, and Proof-of-Path
+principles. E7Q v1.0rc2 pins E7G-T v0.11-UC1 and implements a bounded
+temporal-evidence profile for quantum workflows. The canonical E7G-T kernel
+remains a separate upstream project and is not silently modified by E7Q.
 
 ## License
 

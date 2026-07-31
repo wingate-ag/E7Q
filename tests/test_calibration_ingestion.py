@@ -34,6 +34,11 @@ def test_normalizes_supported_vendor_exports(provider):
     assert result["targets"][0]["native_gates"] == ["X", "H", "CX", "SWAP"]
     assert result["targets"][0]["provenance"]["provider"] == provider
     assert result["provenance"]["network_access"] is False
+    assert result["temporal_evidence"]["carrier"] == "TD0"
+    assert (
+        result["temporal_evidence"]["chronology_status"]
+        == "format-validated-not-authenticated"
+    )
 
 
 def test_rejects_wrong_schema_and_stale_exports():
@@ -46,6 +51,18 @@ def test_rejects_wrong_schema_and_stale_exports():
             max_age_hours=1,
             now=datetime(2026, 7, 29, 9, tzinfo=timezone.utc),
         )
+
+
+def test_records_evaluated_freshness_window():
+    result = ingest_vendor_export(
+        "ibm",
+        export(),
+        max_age_hours=4,
+        now=datetime(2026, 7, 29, 9, tzinfo=timezone.utc),
+    )
+    window = result["temporal_evidence"]["validity_window"]
+    assert window["status"] == "within-window"
+    assert window["age_hours"] == 3
 
 
 def test_cli_writes_normalized_snapshot(tmp_path):
