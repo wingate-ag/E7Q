@@ -1,6 +1,6 @@
 # E7Q Language Specification
 
-**Version:** 1.0.0-rc2
+**Version:** 1.0.0-rc4
 **Status:** experimental draft
 **Documentation licence:** CC-BY-SA-4.0
 
@@ -27,7 +27,9 @@ conditioned transformations, assertions, and reusable-path references.
 - `qubits q[n]`: an n-qubit register initially in `|0…0⟩`;
 - `bits c[n]`: an n-bit classical register initially containing zeroes;
 - context settings: `backend`, `shots`, and optional deterministic `seed`.
-  The reference backends are `statevector` and `densitymatrix`.
+  No other context-setting keys are permitted. `shots` must be a positive
+  integer, and `seed`, when present, must be a non-negative integer. The
+  reference backends are `statevector` and `densitymatrix`.
 
 ## 4. Operations
 

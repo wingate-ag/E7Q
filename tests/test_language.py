@@ -75,6 +75,28 @@ def test_unconsumed_context_input_is_rejected():
         parse(source)
 
 
+def test_unknown_context_setting_is_rejected():
+    source = BELL.read_text(encoding="utf-8").replace(
+        "shots: 1000", "shot: 999999", 1
+    )
+    with pytest.raises(E7QError, match="unknown context setting: shot"):
+        parse(source)
+
+
+def test_negative_seed_is_rejected_before_execution():
+    source = BELL.read_text(encoding="utf-8").replace("seed: 7", "seed: -5", 1)
+    with pytest.raises(E7QError, match="seed must be non-negative"):
+        parse(source)
+
+
+def test_comment_markers_inside_quoted_values_are_not_stripped():
+    source = BELL.read_text(encoding="utf-8").replace(
+        "seed: 7", 'seed: "7#not//a-comment"', 1
+    )
+    with pytest.raises(E7QError, match="seed must be an integer"):
+        parse(source)
+
+
 def test_comments_and_whitespace_remain_permitted():
     source = (
         "// leading comment\n\n"

@@ -1,7 +1,17 @@
 # SPDX-License-Identifier: Apache-2.0
 from pathlib import Path
 
-from e7q.language import from_openqasm, load, openqasm, parse, run, verify
+import pytest
+
+from e7q.language import (
+    E7QError,
+    from_openqasm,
+    load,
+    openqasm,
+    parse,
+    run,
+    verify,
+)
 
 
 EXAMPLES = Path(__file__).parents[1] / "examples"
@@ -34,3 +44,9 @@ def test_openqasm_round_trip_preserves_behavior():
     assert after["status"] == before["status"]
     assert after["counts"] == before["counts"]
     assert after["first_failure"] == before["first_failure"]
+
+
+def test_openqasm_import_rejects_negative_seed():
+    program = load(EXAMPLES / "diagnostic-composition.e7q")
+    with pytest.raises(E7QError, match="seed must be non-negative"):
+        from_openqasm(openqasm(program), seed=-5)
