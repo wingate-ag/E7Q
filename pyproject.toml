@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "e7q"
-version = "1.0.0rc3"
+version = "1.0.0rc4"
 description = "Experimental invariant-aware quantum programming and verification language"
 requires-python = ">=3.11"
 dependencies = ["numpy>=1.26"]

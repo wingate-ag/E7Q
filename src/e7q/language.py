@@ -80,10 +80,42 @@ _ONE_QUBIT = {
 _TWO_QUBIT = {"CX", "CZ", "SWAP"}
 _NOISE_CHANNELS = {"bit_flip", "phase_flip", "depolarizing"}
 _EXECUTABLE_GATES = frozenset(_ONE_QUBIT) | _TWO_QUBIT
+_CONTEXT_SETTINGS = frozenset({"shots", "backend", "seed"})
 
 
 def _strip_comments(source: str) -> str:
-    return re.sub(r"(?m)//.*$|#.*$", "", source)
+    """Strip line comments while preserving markers inside quoted values."""
+    result: list[str] = []
+    index = 0
+    in_string = False
+    escaped = False
+    while index < len(source):
+        character = source[index]
+        if in_string:
+            result.append(character)
+            if escaped:
+                escaped = False
+            elif character == "\\":
+                escaped = True
+            elif character == '"':
+                in_string = False
+            index += 1
+            continue
+        if character == '"':
+            in_string = True
+            result.append(character)
+            index += 1
+            continue
+        if character == "#" or source.startswith("//", index):
+            newline = source.find("\n", index)
+            if newline == -1:
+                break
+            result.append("\n")
+            index = newline + 1
+            continue
+        result.append(character)
+        index += 1
+    return "".join(result)
 
 
 def _required(pattern: str, source: str, label: str) -> re.Match[str]:
@@ -156,6 +188,9 @@ def parse(source: str) -> Program:
     _validate_complete_source(text)
     context = _exactly_one(r"context\s+(\w+)\s*\{(.*?)\}", text, "context declaration")
     settings = _parse_settings(context.group(2))
+    unknown_settings = sorted(set(settings) - _CONTEXT_SETTINGS)
+    if unknown_settings:
+        raise E7QError(f"unknown context setting: {unknown_settings[0]}")
     try:
         shots = int(settings.get("shots", "1024"))
     except ValueError as exc:
@@ -169,6 +204,8 @@ def parse(source: str) -> Program:
         seed = int(settings["seed"]) if "seed" in settings else None
     except ValueError as exc:
         raise E7QError("seed must be an integer") from exc
+    if seed is not None and seed < 0:
+        raise E7QError("seed must be non-negative")
 
     qreg = _exactly_one(
         r"(?m)^\s*qubits\s+(\w+)\[(\d+)\]", text, "qubit register declaration"
@@ -980,6 +1017,10 @@ def openqasm(program: Program) -> str:
 def from_openqasm(source: str, *, name: str = "ImportedCircuit",
                   shots: int = 1024, seed: int | None = None) -> Program:
     """Import the OpenQASM 3 subset emitted by :func:`openqasm`."""
+    if shots < 1:
+        raise E7QError("shots must be positive")
+    if seed is not None and seed < 0:
+        raise E7QError("seed must be non-negative")
     qmatch = _required(r"qubit\[(\d+)\]\s+q\s*;", source, "OpenQASM qubits")
     bmatch = _required(r"bit\[(\d+)\]\s+c\s*;", source, "OpenQASM bits")
     qubits, bits = int(qmatch.group(1)), int(bmatch.group(1))

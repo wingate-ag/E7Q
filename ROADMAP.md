@@ -196,3 +196,10 @@
 - [x] structural and reference-integrity validation for embedded pilot records;
 - [ ] Pilot G comparison against ordinary review and the UC1 profile across
   four materially different domains before any normative promotion claim.
+
+## v1.0rc4 — Parser validation hardening
+
+- [x] reject unknown context-setting keys instead of silently applying defaults;
+- [x] reject negative seeds during E7Q and OpenQASM import validation;
+- [x] preserve `#` and `//` markers inside quoted context values;
+- [x] add adversarial regression coverage for all reported parser findings.

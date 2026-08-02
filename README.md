@@ -187,7 +187,7 @@ and detailed usage of each capability.
 
 E7Q is a downstream implementation of E7G-T's invariant, transformation,
 projection, measurement-accountability, temporal-geometry, and Proof-of-Path
-principles. E7Q v1.0rc3 pins E7G-T v0.11-UC2, implements a bounded temporal-
+principles. E7Q v1.0rc4 pins E7G-T v0.11-UC2, implements a bounded temporal-
 evidence profile, and offers UC2's informative observation/interpretation
 module as an opt-in pilot for quantum workflows. The canonical E7G-T kernel
 remains a separate upstream project and is not silently modified by E7Q.
