@@ -27,6 +27,11 @@
 | Observational claim | Source-bounded statement of what the supplied record reports |
 | Interpretation | `PASS`, `FAIL`, `DRIFT`, or `TREND_DETECTED` under declared rules, bridges, models, and criteria |
 | Shared observational field | Jointly admissible claim references plus preserved divergence and unknowns across runs or campaigns |
+| Temporal orientation | Declared direction for Proof-of-Path traversal, result reconstruction, baseline/candidate comparison, or supplied trend order |
+| Observer temporal locality | Offline review position relative to the supplied bundle, receipt, campaign pair, or report family |
+| Reverse representation | Reverse traversal or narration that does not establish reversed dynamics or causation |
+| Typed directional relation | Explicit clock, sequence, dependency, observational, reconstructive, causal, final-constraint, or global-consistency role |
+| Compatible-history relevance | Histories still consistent with supplied evidence under fixed conditions; epistemic and distinct from quantum state update |
 
 Structural order and temporal order are independent. For example, one D2
 document may be a TD0 snapshot, participate in a TD1 version history, or belong

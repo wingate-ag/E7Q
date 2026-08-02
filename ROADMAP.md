@@ -203,3 +203,17 @@
 - [x] reject negative seeds during E7Q and OpenQASM import validation;
 - [x] preserve `#` and `//` markers inside quoted context values;
 - [x] add adversarial regression coverage for all reported parser findings.
+
+## v1.0rc5 — E7G-T v0.11-UC3 temporal-orientation pilot
+
+- [x] immutable upstream pin to E7G-T v0.11-UC3;
+- [x] opt-in `e7q.temporal-orientation-pilot/v1alpha1` records;
+- [x] explicit observer locality and typed directional relations;
+- [x] separation of reverse representation, time-reversal symmetry, and causal reversal;
+- [x] history-whole and compatible-history relevance boundaries;
+- [x] artifact validation and CLI support for bundle, receipt, replication,
+  drift, and trend workflows;
+- [x] explicit separation from computational-basis measurement update and
+  ontological collapse claims;
+- [ ] Pilot H comparison across materially different settings before any
+  normative promotion claim.

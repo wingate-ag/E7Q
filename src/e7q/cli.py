@@ -67,11 +67,13 @@ def _parser() -> argparse.ArgumentParser:
     bundle.add_argument("source", type=Path)
     bundle.add_argument("--snapshot", required=True, type=Path)
     bundle.add_argument("--shots", type=int, default=1000)
+    bundle.add_argument("--temporal-orientation-pilot", action="store_true")
     bundle.add_argument("-o", "--output", required=True, type=Path)
     receipt = commands.add_parser("receipt")
     receipt.add_argument("bundle", type=Path)
     receipt.add_argument("--result", required=True, type=Path)
     receipt.add_argument("--observation-pilot", action="store_true")
+    receipt.add_argument("--temporal-orientation-pilot", action="store_true")
     receipt.add_argument("-o", "--output", required=True, type=Path)
     assess = commands.add_parser("assess")
     assess.add_argument("receipt", type=Path)
@@ -82,6 +84,7 @@ def _parser() -> argparse.ArgumentParser:
     replicate.add_argument("--max-pairwise-tvd", type=float, default=0.1)
     replicate.add_argument("--significance-level", type=float, default=0.05)
     replicate.add_argument("--observation-pilot", action="store_true")
+    replicate.add_argument("--temporal-orientation-pilot", action="store_true")
     replicate.add_argument("-o", "--output", required=True, type=Path)
     drift = commands.add_parser("drift")
     drift.add_argument("baseline", type=Path)
@@ -89,12 +92,14 @@ def _parser() -> argparse.ArgumentParser:
     drift.add_argument("--max-total-variation", type=float, default=0.1)
     drift.add_argument("--significance-level", type=float, default=0.05)
     drift.add_argument("--observation-pilot", action="store_true")
+    drift.add_argument("--temporal-orientation-pilot", action="store_true")
     drift.add_argument("-o", "--output", required=True, type=Path)
     trend = commands.add_parser("trend")
     trend.add_argument("campaigns", nargs="+", type=Path)
     trend.add_argument("--max-total-variation", type=float, default=0.1)
     trend.add_argument("--significance-level", type=float, default=0.05)
     trend.add_argument("--observation-pilot", action="store_true")
+    trend.add_argument("--temporal-orientation-pilot", action="store_true")
     trend.add_argument("-o", "--output", required=True, type=Path)
     artifact = commands.add_parser("validate-artifact")
     artifact.add_argument("source", type=Path)
@@ -140,7 +145,11 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "bundle":
             source = args.source.read_bytes()
             result = build_execution_bundle(
-                load(args.source), source, load_snapshot(args.snapshot), shots=args.shots
+                load(args.source),
+                source,
+                load_snapshot(args.snapshot),
+                shots=args.shots,
+                include_temporal_orientation_pilot=args.temporal_orientation_pilot,
             )
             args.output.write_text(
                 json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8"
@@ -156,6 +165,7 @@ def main(argv: list[str] | None = None) -> int:
                 result_value,
                 result_bytes,
                 include_observational_claim_pilot=args.observation_pilot,
+                include_temporal_orientation_pilot=args.temporal_orientation_pilot,
             )
             args.output.write_text(
                 json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8"
@@ -177,6 +187,7 @@ def main(argv: list[str] | None = None) -> int:
                 max_pairwise_tvd=args.max_pairwise_tvd,
                 significance_level=args.significance_level,
                 include_observational_claim_pilot=args.observation_pilot,
+                include_temporal_orientation_pilot=args.temporal_orientation_pilot,
             )
             args.output.write_text(
                 json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
@@ -190,6 +201,7 @@ def main(argv: list[str] | None = None) -> int:
                 max_total_variation=args.max_total_variation,
                 significance_level=args.significance_level,
                 include_observational_claim_pilot=args.observation_pilot,
+                include_temporal_orientation_pilot=args.temporal_orientation_pilot,
             )
             args.output.write_text(
                 json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
@@ -202,6 +214,7 @@ def main(argv: list[str] | None = None) -> int:
                 max_total_variation=args.max_total_variation,
                 significance_level=args.significance_level,
                 include_observational_claim_pilot=args.observation_pilot,
+                include_temporal_orientation_pilot=args.temporal_orientation_pilot,
             )
             args.output.write_text(
                 json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"

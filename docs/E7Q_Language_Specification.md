@@ -1,6 +1,6 @@
 # E7Q Language Specification
 
-**Version:** 1.0.0-rc4
+**Version:** 1.0.0-rc5
 **Status:** experimental draft
 **Documentation licence:** CC-BY-SA-4.0
 
@@ -256,7 +256,7 @@ physical fidelity.
 
 ## 19. Bounded temporal-evidence profile
 
-E7Q implements a bounded quantum-workflow profile of the E7G-T v0.11-UC2
+E7Q implements a bounded quantum-workflow profile of the E7G-T v0.11-UC3
 temporal subkernel. Time is treated as an admitted structure that may be
 extended, ordered, projected, summarized, phase-classified, and checked for
 declared boundary crossings. This profile governs evidence semantics only;
@@ -361,7 +361,35 @@ the optional block is present. The pilot does not establish provider identity,
 run independence, authenticated chronology, physical fidelity, causation,
 future stability, consensus as truth, or an observer-relative ontology.
 
-## 21. Offline artifact conformance
+## 21. Optional temporal-orientation pilot
+
+E7Q implements the informative E7G-T v0.11-UC3 temporal-orientation module as
+the separate opt-in schema `e7q.temporal-orientation-pilot/v1alpha1`. It is not
+emitted unless requested and is not required for ordinary artifact
+conformance.
+
+The pilot declares temporal orientation, observer temporal locality, and one
+or more typed directional relations. It records any reverse representation,
+the structure preserved or unsupported under reversal, and separate statuses
+for time-reversal symmetry and causal reversal. It also names the relevant
+history-whole, clock model, accumulated record, compatible-history family,
+fixed conditions, excluded histories, corrections, retractions, and
+interaction rules.
+
+The CLI flag `--temporal-orientation-pilot` invokes the profile for execution
+bundles, receipts, replication, drift, and trend workflows. Structural
+artifact validation checks the optional block when present.
+
+Reverse Proof-of-Path traversal or later-to-earlier reconstruction does not
+establish dynamically admissible reverse execution or backward physical
+causation. Joint history-whole membership does not establish clock
+simultaneity. Compatible-history relevance narrowing is an epistemic limit on
+the current reconstruction under fixed conditions; it is distinct from E7Q's
+computational-basis measurement update and does not establish ontological
+collapse, retrocausation, fundamental time neutrality, supertime, or physical
+realisation of alternative histories.
+
+## 22. Offline artifact conformance
 
 E7Q registers the stable offline artifact families produced by calibration
 ingestion, execution handoff, result normalization, statistical assessment,

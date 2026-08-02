@@ -7,6 +7,7 @@ from e7q.campaigns import assess_replication
 from e7q.cli import main
 from e7q.language import E7QError
 from e7q.observations import conformance_checks
+from e7q.orientation import conformance_checks as orientation_checks
 
 
 def receipt(digest, left, right, *, bundle="sha256:bundle", target="backend"):
@@ -63,6 +64,20 @@ def test_replication_observation_pilot_preserves_divergence_and_unknowns():
     assert all(check["passed"] for check in conformance_checks(pilot_value))
 
 
+def test_replication_orientation_pilot_does_not_invent_run_chronology():
+    result = assess_replication(
+        [receipt("sha256:a", 50, 50), receipt("sha256:b", 60, 40)],
+        include_temporal_orientation_pilot=True,
+    )
+    pilot_value = result["temporal_orientation_pilot"]
+    assert pilot_value["directional_relation_kinds"] == [
+        "dependency",
+        "globalConsistency",
+    ]
+    assert "sequence" not in pilot_value["directional_relation_kinds"]
+    assert all(check["passed"] for check in orientation_checks(pilot_value))
+
+
 def test_replication_rejects_mismatched_or_duplicate_evidence():
     with pytest.raises(E7QError, match="same bundle and target"):
         assess_replication([
@@ -86,7 +101,14 @@ def test_replicate_cli_writes_report(tmp_path):
         path.write_text(json.dumps(value), encoding="utf-8")
         paths.append(path)
     output = tmp_path / "replication.json"
-    assert main(["replicate", *(str(path) for path in paths), "-o", str(output)]) == 0
+    assert main([
+        "replicate",
+        *(str(path) for path in paths),
+        "--temporal-orientation-pilot",
+        "-o",
+        str(output),
+    ]) == 0
     report = json.loads(output.read_text(encoding="utf-8"))
     assert report["schema"] == "e7q.replication-report/v1"
     assert report["proof"][-1]["kind"] == "evidence-boundary"
+    assert report["temporal_orientation_pilot"]["invoked"] is True

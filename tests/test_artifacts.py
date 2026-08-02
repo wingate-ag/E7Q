@@ -67,6 +67,17 @@ def test_invalid_embedded_observation_pilot_fails():
     )
 
 
+def test_invalid_embedded_orientation_pilot_fails():
+    value = trend()
+    value["temporal_orientation_pilot"] = {"schema": "unsupported"}
+    result = validate_artifact(value)
+    assert result["status"] == "FAIL"
+    assert any(
+        check["name"] == "orientation-pilot:schema" and not check["passed"]
+        for check in result["checks"]
+    )
+
+
 def test_validate_artifact_cli(tmp_path):
     source = tmp_path / "trend.json"
     output = tmp_path / "conformance.json"

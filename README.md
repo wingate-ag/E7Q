@@ -149,6 +149,24 @@ e7q replicate receipt-1.json receipt-2.json \
 The module is opt-in because it remains informative in E7G-T v0.11-UC2.
 Ordinary E7Q artifacts remain valid without it.
 
+### Optional E7G-T UC3 temporal-orientation pilot
+
+Execution bundles, receipts, replication, drift, and trend commands accept
+`--temporal-orientation-pilot`. The flag adds a separate versioned block that
+declares observer locality and relation kinds, and distinguishes reverse audit
+or reconstruction from time-reversal symmetry and causal reversal.
+
+```bash
+e7q trend campaign-0.json campaign-1.json campaign-2.json \
+  --temporal-orientation-pilot \
+  -o trend-report.json
+```
+
+The profile also makes compatible-history relevance explicit without treating
+excluded histories as destroyed or nonexistent. It is opt-in because the UC3
+module remains informative pending Pilot H. It does not alter quantum state
+evolution or identify evidential history narrowing with measurement collapse.
+
 ## Evidence and validation
 
 E7Q's credential-free core is complete as a v1.0 release candidate.
@@ -176,6 +194,7 @@ only when the registered schema and required top-level evidence are present.
 - [E7G-T to E7Q mapping](docs/E7GT_Quantum_Mapping.md)
 - [Temporal-evidence profile](docs/TEMPORAL_EVIDENCE_PROFILE.md)
 - [UC2 observational-claim pilot](docs/OBSERVATIONAL_CLAIM_PILOT.md)
+- [UC3 temporal-orientation pilot](docs/TEMPORAL_ORIENTATION_PILOT.md)
 - [Roadmap](ROADMAP.md)
 - [Offline completion boundary](docs/MILESTONE_18.md)
 - [E7G-T upstream relationship](references/E7GT_UPSTREAM.md)
@@ -187,10 +206,11 @@ and detailed usage of each capability.
 
 E7Q is a downstream implementation of E7G-T's invariant, transformation,
 projection, measurement-accountability, temporal-geometry, and Proof-of-Path
-principles. E7Q v1.0rc4 pins E7G-T v0.11-UC2, implements a bounded temporal-
-evidence profile, and offers UC2's informative observation/interpretation
-module as an opt-in pilot for quantum workflows. The canonical E7G-T kernel
-remains a separate upstream project and is not silently modified by E7Q.
+principles. E7Q v1.0rc5 pins E7G-T v0.11-UC3, implements a bounded temporal-
+evidence profile, and offers UC2's observation/interpretation and UC3's
+temporal-orientation modules as separate opt-in pilots for quantum workflows.
+The canonical E7G-T kernel remains a separate upstream project and is not
+silently modified by E7Q.
 
 ## License
 
