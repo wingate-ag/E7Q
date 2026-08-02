@@ -14,6 +14,7 @@ from .observations import (
     observational_claim,
     observational_claim_pilot,
 )
+from .orientation import temporal_orientation_pilot
 from .temporal import temporal_evidence
 
 
@@ -59,6 +60,7 @@ def build_execution_receipt(
     result_bytes: bytes,
     *,
     include_observational_claim_pilot: bool = False,
+    include_temporal_orientation_pilot: bool = False,
 ) -> dict[str, object]:
     """Validate supplied evidence and build a deterministic offline receipt."""
     if result["target"] != bundle.get("target"):
@@ -276,5 +278,55 @@ def build_execution_receipt(
                     ),
                 )
             ],
+        )
+    if include_temporal_orientation_pilot:
+        receipt["temporal_orientation_pilot"] = temporal_orientation_pilot(
+            pilot_id="e7q.execution-receipt",
+            orientation_ref="reported result to compatible execution-history reconstruction",
+            observer_temporal_locality_ref="offline review after receipt normalization",
+            directional_relation_kinds=[
+                "observationalPrecedence",
+                "reconstructivePrecedence",
+                "dependency",
+                "globalConsistency",
+            ],
+            reverse_representation_ref="reverse traversal of the receipt proof",
+            preserved_under_reversal=[
+                "proof-step membership",
+                "bundle and result identity",
+                "aggregate counts",
+            ],
+            reversed_hidden_or_unsupported=[
+                "proof-step order",
+                "shot order and timing",
+                "physical causation",
+            ],
+            time_reversal_symmetry_status="not-assessed",
+            causal_reversal_status="unsupported",
+            final_constraint_refs=["receipt consistency criterion"],
+            global_consistency_refs=["bundle digest and count-total linkage"],
+            history_whole_ref=f"provider-reported job:{result['job_id']}",
+            clock_or_synchronisation_model_ref=(
+                "provider-reported completed_at field; not authenticated"
+            ),
+            accumulated_valid_record_ref=_digest(result_bytes),
+            compatible_history_family_ref="temporal_evidence.reconstruction",
+            fixed_condition_refs=[
+                actual_bundle_digest,
+                _digest(result_bytes),
+                "e7q.receipt-consistency@1",
+            ],
+            excluded_history_refs=[],
+            exclusion_meaning=(
+                "a history inconsistent with the supplied artifacts is irrelevant "
+                "to this reconstruction, not established as unrealised or nonexistent"
+            ),
+            correction_or_retraction_refs=[],
+            interaction_rule_refs=[],
+            narrowing_status="not-claimed",
+            decision_effect=(
+                "bounds PASS to the supplied bundle/result pair and prevents reverse "
+                "audit reconstruction from being read as reversed physical execution"
+            ),
         )
     return receipt

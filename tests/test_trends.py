@@ -7,6 +7,7 @@ from e7q.cli import main
 from e7q.language import E7QError
 from e7q.trends import assess_trend
 from e7q.observations import conformance_checks
+from e7q.orientation import conformance_checks as orientation_checks
 
 
 def report(bundle, left, right, *, target="backend"):
@@ -60,6 +61,21 @@ def test_trend_observation_pilot_does_not_invent_temporal_bridge():
     assert all(check["passed"] for check in conformance_checks(pilot_value))
 
 
+def test_trend_orientation_pilot_preserves_supplied_order_boundary():
+    result = assess_trend(
+        [
+            report("sha256:a", 50, 50),
+            report("sha256:b", 51, 49),
+            report("sha256:c", 90, 10),
+        ],
+        include_temporal_orientation_pilot=True,
+    )
+    pilot_value = result["temporal_orientation_pilot"]
+    assert pilot_value["clock_or_synchronisation_model_ref"].startswith("user-supplied")
+    assert pilot_value["causal_reversal_status"] == "unsupported"
+    assert all(check["passed"] for check in orientation_checks(pilot_value))
+
+
 def test_trend_requires_three_compatible_campaigns():
     with pytest.raises(E7QError, match="at least two candidate"):
         assess_trend([report("a", 50, 50), report("b", 50, 50)])
@@ -78,7 +94,14 @@ def test_trend_cli_writes_report(tmp_path):
         path.write_text(json.dumps(report(f"sha256:{index}", *counts)), encoding="utf-8")
         paths.append(path)
     output = tmp_path / "trend.json"
-    assert main(["trend", *(str(path) for path in paths), "-o", str(output)]) == 0
+    assert main([
+        "trend",
+        *(str(path) for path in paths),
+        "--temporal-orientation-pilot",
+        "-o",
+        str(output),
+    ]) == 0
     value = json.loads(output.read_text(encoding="utf-8"))
     assert value["schema"] == "e7q.trend-report/v1"
     assert value["proof"][-1]["kind"] == "evidence-boundary"
+    assert value["temporal_orientation_pilot"]["invoked"] is True

@@ -16,6 +16,7 @@ from .observations import (
     observational_claim_pilot,
     shared_observational_field,
 )
+from .orientation import temporal_orientation_pilot
 from .temporal import temporal_evidence
 
 
@@ -40,6 +41,7 @@ def assess_replication(
     max_pairwise_tvd: float = 0.1,
     significance_level: float = 0.05,
     include_observational_claim_pilot: bool = False,
+    include_temporal_orientation_pilot: bool = False,
 ) -> dict[str, object]:
     """Assess distributional consistency across independently supplied receipts."""
     if len(receipts) < 2:
@@ -335,6 +337,44 @@ def assess_replication(
                 independence_conditions=[
                     "independence is not established by distinct result digests"
                 ],
+            ),
+        )
+    if include_temporal_orientation_pilot:
+        report["temporal_orientation_pilot"] = temporal_orientation_pilot(
+            pilot_id="e7q.replication-report",
+            orientation_ref="unordered family comparison from completed receipt set",
+            observer_temporal_locality_ref="offline review after all supplied receipts",
+            directional_relation_kinds=["dependency", "globalConsistency"],
+            reverse_representation_ref=None,
+            preserved_under_reversal=[],
+            reversed_hidden_or_unsupported=[
+                "run chronology",
+                "inter-run causal direction",
+            ],
+            time_reversal_symmetry_status="not-assessed",
+            causal_reversal_status="unsupported",
+            final_constraint_refs=["replication consistency thresholds"],
+            global_consistency_refs=["common bundle digest and target"],
+            history_whole_ref="supplied execution-receipt family",
+            clock_or_synchronisation_model_ref="none; replication family is unordered",
+            accumulated_valid_record_ref="validated supplied receipt family",
+            compatible_history_family_ref="temporal_evidence.reconstruction",
+            fixed_condition_refs=[
+                bundle,
+                target,
+                "e7q.replication-consistency@1",
+            ],
+            excluded_history_refs=[],
+            exclusion_meaning=(
+                "no run chronology is excluded or selected by the unordered "
+                "replication assessment"
+            ),
+            correction_or_retraction_refs=[],
+            interaction_rule_refs=[],
+            narrowing_status="not-claimed",
+            decision_effect=(
+                "prevents receipt list order from being treated as chronology and "
+                "prevents consistency or divergence from becoming a causal claim"
             ),
         )
     return report

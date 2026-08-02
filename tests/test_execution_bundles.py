@@ -6,6 +6,7 @@ import pytest
 from e7q.bundles import build_execution_bundle
 from e7q.cli import main
 from e7q.language import E7QError, parse
+from e7q.orientation import conformance_checks as orientation_checks
 
 
 SOURCE = b"""context BundleDemo {\n  shots: 1000\n  backend: statevector\n  seed: 7\n}\n\nqubits q[2]\nbits c[2]\n\ninvariant normalized\ninvariant outcomes in {00, 11}\n\npath Prepare {\n  H q[0]\n  CX q[0], q[1]\n  measure q -> c\n}\n\nverify Prepare\n"""
@@ -42,6 +43,20 @@ def test_bundle_is_reproducible_and_offline():
     assert first["proof"][-1]["kind"] == "handoff-boundary"
     assert first["temporal_evidence"]["temporal_order_roles"] == ["TD1"]
     assert first["temporal_evidence"]["chronology_status"] == "proof-order-only"
+    assert "temporal_orientation_pilot" not in first
+
+
+def test_bundle_temporal_orientation_pilot_is_opt_in():
+    value = build_execution_bundle(
+        parse(SOURCE.decode()),
+        SOURCE,
+        snapshot(),
+        shots=256,
+        include_temporal_orientation_pilot=True,
+    )
+    pilot = value["temporal_orientation_pilot"]
+    assert pilot["causal_reversal_status"] == "unsupported"
+    assert all(check["passed"] for check in orientation_checks(pilot))
 
 
 def test_rejects_invalid_shot_count():
@@ -57,9 +72,10 @@ def test_cli_writes_bundle(tmp_path):
     calibration.write_text(json.dumps(snapshot()), encoding="utf-8")
     assert main([
         "bundle", str(source), "--snapshot", str(calibration),
-        "--shots", "128", "-o", str(output),
+        "--shots", "128", "--temporal-orientation-pilot", "-o", str(output),
     ]) == 0
     result = json.loads(output.read_text(encoding="utf-8"))
     assert result["status"] == "READY"
     assert result["submitted"] is False
     assert result["shots"] == 128
+    assert result["temporal_orientation_pilot"]["invoked"] is True

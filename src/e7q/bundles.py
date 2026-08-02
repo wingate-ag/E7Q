@@ -8,6 +8,7 @@ from typing import Any
 
 from .calibration import select_target
 from .language import E7QError, Program, openqasm
+from .orientation import temporal_orientation_pilot
 from .planning import plan, plan_result
 from .temporal import temporal_evidence
 
@@ -22,6 +23,7 @@ def build_execution_bundle(
     snapshot: dict[str, object],
     *,
     shots: int = 1000,
+    include_temporal_orientation_pilot: bool = False,
 ) -> dict[str, object]:
     """Build an offline handoff bundle without submitting a hardware job."""
     if shots < 1:
@@ -78,7 +80,7 @@ def build_execution_bundle(
             ),
         },
     ]
-    return {
+    bundle: dict[str, object] = {
         "schema": "e7q.execution-bundle/v1",
         "status": "READY",
         "submitted": False,
@@ -134,3 +136,46 @@ def build_execution_bundle(
         },
         "proof": proof,
     }
+    if include_temporal_orientation_pilot:
+        bundle["temporal_orientation_pilot"] = temporal_orientation_pilot(
+            pilot_id="e7q.execution-bundle",
+            orientation_ref="program-to-offline-handoff Proof-of-Path order",
+            observer_temporal_locality_ref="offline handoff boundary after compilation",
+            directional_relation_kinds=["sequence", "dependency", "globalConsistency"],
+            reverse_representation_ref="handoff-to-input reverse proof traversal",
+            preserved_under_reversal=[
+                "proof-step membership",
+                "source, snapshot, and OpenQASM identity digests",
+            ],
+            reversed_hidden_or_unsupported=[
+                "Proof-of-Path step order",
+                "submission, execution, and physical causation",
+            ],
+            time_reversal_symmetry_status="not-assessed",
+            causal_reversal_status="unsupported",
+            final_constraint_refs=["offline handoff readiness criterion"],
+            global_consistency_refs=["source, snapshot, and OpenQASM digest linkage"],
+            history_whole_ref="one preparation-and-handoff Proof-of-Path",
+            clock_or_synchronisation_model_ref="snapshot captured_at field; unauthenticated",
+            accumulated_valid_record_ref="execution bundle proof",
+            compatible_history_family_ref="temporal_evidence.reconstruction",
+            fixed_condition_refs=[
+                "program source bytes",
+                "calibration snapshot",
+                "target-selection policy",
+                "compiler and planner rules",
+            ],
+            excluded_history_refs=[],
+            exclusion_meaning=(
+                "incompatibility with the bundle digests and proof path, not "
+                "destruction or nonexistence"
+            ),
+            correction_or_retraction_refs=[],
+            interaction_rule_refs=[],
+            narrowing_status="not-claimed",
+            decision_effect=(
+                "permits reverse audit traversal while blocking claims that the "
+                "preparation process or physical causation ran backwards"
+            ),
+        )
+    return bundle

@@ -14,6 +14,7 @@ from .observations import (
     observational_claim_pilot,
     shared_observational_field,
 )
+from .orientation import temporal_orientation_pilot
 from .temporal import temporal_evidence
 
 
@@ -30,6 +31,7 @@ def assess_trend(
     max_total_variation: float = 0.1,
     significance_level: float = 0.05,
     include_observational_claim_pilot: bool = False,
+    include_temporal_orientation_pilot: bool = False,
 ) -> dict[str, object]:
     """Compare each supplied campaign with the first, controlling repeated tests."""
     if len(reports) < 3:
@@ -253,5 +255,57 @@ def assess_trend(
                 independence_conditions=["campaign independence is not established"],
             ),
             temporal_extension_bridges=[],
+        )
+    if include_temporal_orientation_pilot:
+        report["temporal_orientation_pilot"] = temporal_orientation_pilot(
+            pilot_id="e7q.trend-report",
+            orientation_ref="supplied baseline-to-later campaign sequence",
+            observer_temporal_locality_ref="offline review after the supplied series",
+            directional_relation_kinds=[
+                "sequence",
+                "observationalPrecedence",
+                "reconstructivePrecedence",
+                "dependency",
+                "globalConsistency",
+            ],
+            reverse_representation_ref="reverse traversal of supplied campaign indices",
+            preserved_under_reversal=[
+                "campaign membership",
+                "pooled distributions",
+                "baseline-relative comparison results",
+            ],
+            reversed_hidden_or_unsupported=[
+                "supplied sequence roles",
+                "authenticated chronology and elapsed time",
+                "causal explanation",
+            ],
+            time_reversal_symmetry_status="not-assessed",
+            causal_reversal_status="unsupported",
+            final_constraint_refs=["e7q.trend-threshold@1"],
+            global_consistency_refs=["common target and outcome width"],
+            history_whole_ref="supplied ordered campaign family",
+            clock_or_synchronisation_model_ref=(
+                "user-supplied index order; no authenticated clock model"
+            ),
+            accumulated_valid_record_ref="validated ordered campaign-report family",
+            compatible_history_family_ref="temporal_evidence.reconstruction",
+            fixed_condition_refs=[
+                "supplied campaign order",
+                "baseline campaign at index zero",
+                "e7q.trend-threshold@1",
+                "Bonferroni multiplicity policy",
+            ],
+            excluded_history_refs=[],
+            exclusion_meaning=(
+                "histories incompatible with the supplied reports and fixed analysis "
+                "conditions are irrelevant to this reconstruction, not nonexistent"
+            ),
+            correction_or_retraction_refs=[],
+            interaction_rule_refs=[],
+            narrowing_status="not-claimed",
+            decision_effect=(
+                f"types {status} as a supplied-order, baseline-relative result and "
+                "blocks extrapolation to causal direction or continuous history"
+            ),
         )
     return report

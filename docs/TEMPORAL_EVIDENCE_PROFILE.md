@@ -1,6 +1,6 @@
 # E7Q Temporal-Evidence Profile
 
-E7Q v1.0rc3 implements a bounded operational profile of the E7G-T v0.11-UC2
+E7Q v1.0rc5 implements a bounded operational profile of the E7G-T v0.11-UC3
 temporal subkernel. The profile makes temporal claims in offline quantum
 workflows explicit and reviewable without altering quantum execution
 semantics.

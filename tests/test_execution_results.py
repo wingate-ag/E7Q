@@ -6,6 +6,7 @@ import pytest
 from e7q.cli import main
 from e7q.language import E7QError
 from e7q.observations import conformance_checks
+from e7q.orientation import conformance_checks as orientation_checks
 from e7q.results import build_execution_receipt
 
 
@@ -41,6 +42,7 @@ def test_receipt_validates_linkage_and_probabilities():
     receipt = build_execution_receipt(bundle(), encode(bundle()), result(), encode(result()))
     assert receipt["schema"] == "e7q.execution-receipt/v1"
     assert "observational_claim_pilot" not in receipt
+    assert "temporal_orientation_pilot" not in receipt
     assert receipt["status"] == "PASS"
     assert receipt["probabilities"] == {"00": 0.48, "11": 0.52}
     assert receipt["proof"][-1]["kind"] == "evidence-boundary"
@@ -80,6 +82,20 @@ def test_receipt_observation_pilot_separates_record_claim_and_interpretation():
     assert all(check["passed"] for check in conformance_checks(pilot_value))
 
 
+def test_receipt_temporal_orientation_pilot_blocks_reverse_causation_overread():
+    receipt = build_execution_receipt(
+        bundle(),
+        encode(bundle()),
+        result(),
+        encode(result()),
+        include_temporal_orientation_pilot=True,
+    )
+    pilot_value = receipt["temporal_orientation_pilot"]
+    assert pilot_value["time_reversal_symmetry_status"] == "not-assessed"
+    assert pilot_value["causal_reversal_status"] == "unsupported"
+    assert all(check["passed"] for check in orientation_checks(pilot_value))
+
+
 def test_cli_writes_receipt(tmp_path):
     bundle_path = tmp_path / "bundle.json"
     result_path = tmp_path / "result.json"
@@ -88,9 +104,10 @@ def test_cli_writes_receipt(tmp_path):
     result_path.write_text(json.dumps(result()), encoding="utf-8")
     assert main([
         "receipt", str(bundle_path), "--result", str(result_path),
-        "--observation-pilot", "-o", str(output)
+        "--observation-pilot", "--temporal-orientation-pilot", "-o", str(output)
     ]) == 0
     receipt = json.loads(output.read_text(encoding="utf-8"))
     assert receipt["status"] == "PASS"
     assert receipt["counts"] == {"00": 48, "11": 52}
     assert receipt["observational_claim_pilot"]["invoked"] is True
+    assert receipt["temporal_orientation_pilot"]["invoked"] is True

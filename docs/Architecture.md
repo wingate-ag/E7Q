@@ -13,6 +13,9 @@
 8. **Observational-claim pilot** optionally separates supplied records and
    bounded observational claims from E7Q's statistical interpretations, while
    preserving shared divergence, unknowns, and temporal-extension boundaries.
+9. **Temporal-orientation pilot** optionally declares observer locality,
+   directional relation kinds, reverse-representation limits, and
+   compatible-history relevance without changing executable quantum semantics.
 
 ## Boundary
 
@@ -25,6 +28,11 @@ claim additional physical time dimensions.
 The observation pilot is an informative E7G-T UC2 experiment. It does not make
 an observer's available records equivalent to reality, turn agreement into
 truth, or upgrade an offline verdict into provider or hardware validation.
+
+The temporal-orientation pilot is an informative E7G-T UC3 experiment. It does
+not equate reverse audit traversal with reversed dynamics or causation, equate
+history-whole membership with simultaneity, or turn evidential relevance
+narrowing into quantum measurement collapse or an ontological claim.
 
 ## v0.1 implementation
 

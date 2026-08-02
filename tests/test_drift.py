@@ -7,6 +7,7 @@ from e7q.cli import main
 from e7q.drift import assess_drift
 from e7q.language import E7QError
 from e7q.observations import conformance_checks
+from e7q.orientation import conformance_checks as orientation_checks
 
 
 def report(bundle, left, right, *, target="backend"):
@@ -47,6 +48,18 @@ def test_drift_observation_pilot_is_opt_in_and_valid():
     assert all(check["passed"] for check in conformance_checks(pilot_value))
 
 
+def test_drift_orientation_pilot_separates_reverse_view_from_causation():
+    result = assess_drift(
+        report("sha256:a", 50, 50),
+        report("sha256:b", 90, 10),
+        include_temporal_orientation_pilot=True,
+    )
+    pilot_value = result["temporal_orientation_pilot"]
+    assert pilot_value["reverse_representation_ref"]
+    assert pilot_value["causal_reversal_status"] == "unsupported"
+    assert all(check["passed"] for check in orientation_checks(pilot_value))
+
+
 def test_drift_rejects_incompatible_or_malformed_reports():
     with pytest.raises(E7QError, match="same target"):
         assess_drift(report("sha256:a", 50, 50), report("sha256:b", 50, 50, target="other"))
@@ -61,7 +74,15 @@ def test_drift_cli_writes_report(tmp_path):
     output = tmp_path / "drift.json"
     baseline.write_text(json.dumps(report("sha256:a", 48, 52)), encoding="utf-8")
     candidate.write_text(json.dumps(report("sha256:b", 52, 48)), encoding="utf-8")
-    assert main(["drift", str(baseline), str(candidate), "-o", str(output)]) == 0
+    assert main([
+        "drift",
+        str(baseline),
+        str(candidate),
+        "--temporal-orientation-pilot",
+        "-o",
+        str(output),
+    ]) == 0
     value = json.loads(output.read_text(encoding="utf-8"))
     assert value["schema"] == "e7q.drift-report/v1"
     assert value["proof"][-1]["kind"] == "evidence-boundary"
+    assert value["temporal_orientation_pilot"]["invoked"] is True

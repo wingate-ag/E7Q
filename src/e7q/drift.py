@@ -15,6 +15,7 @@ from .observations import (
     observational_claim_pilot,
     shared_observational_field,
 )
+from .orientation import temporal_orientation_pilot
 from .temporal import temporal_evidence
 
 
@@ -35,6 +36,7 @@ def assess_drift(
     max_total_variation: float = 0.1,
     significance_level: float = 0.05,
     include_observational_claim_pilot: bool = False,
+    include_temporal_orientation_pilot: bool = False,
 ) -> dict[str, object]:
     """Compare pooled finite-sample distributions from two supplied campaigns."""
     if not isinstance(max_total_variation, (int, float)) or isinstance(max_total_variation, bool) or not 0 <= max_total_variation <= 1:
@@ -299,6 +301,57 @@ def assess_drift(
                 provenance_conditions=["supplied replication-report artifacts"],
                 admissibility_conditions=["valid pooled counts and shot totals"],
                 independence_conditions=["campaign independence is not established"],
+            ),
+        )
+    if include_temporal_orientation_pilot:
+        report["temporal_orientation_pilot"] = temporal_orientation_pilot(
+            pilot_id="e7q.drift-report",
+            orientation_ref="declared baseline-to-candidate comparison",
+            observer_temporal_locality_ref="offline review after both campaign reports",
+            directional_relation_kinds=[
+                "sequence",
+                "observationalPrecedence",
+                "reconstructivePrecedence",
+                "dependency",
+                "globalConsistency",
+            ],
+            reverse_representation_ref="candidate-to-baseline descriptive traversal",
+            preserved_under_reversal=[
+                "campaign membership",
+                "pooled distributions",
+                "symmetric distance value",
+            ],
+            reversed_hidden_or_unsupported=[
+                "declared baseline/candidate roles",
+                "authenticated chronology",
+                "causal explanation",
+            ],
+            time_reversal_symmetry_status="not-assessed",
+            causal_reversal_status="unsupported",
+            final_constraint_refs=["e7q.drift-threshold@1"],
+            global_consistency_refs=["common target and outcome width"],
+            history_whole_ref="declared baseline-candidate campaign pair",
+            clock_or_synchronisation_model_ref=(
+                "declared role order only; elapsed time is not authenticated"
+            ),
+            accumulated_valid_record_ref="validated baseline and candidate reports",
+            compatible_history_family_ref="temporal_evidence.reconstruction",
+            fixed_condition_refs=[
+                str(baseline.get("bundle_digest") or "baseline"),
+                str(candidate.get("bundle_digest") or "candidate"),
+                "e7q.drift-threshold@1",
+            ],
+            excluded_history_refs=[],
+            exclusion_meaning=(
+                "histories incompatible with the supplied pooled reports do not "
+                "support this reconstruction; no ontological conclusion follows"
+            ),
+            correction_or_retraction_refs=[],
+            interaction_rule_refs=[],
+            narrowing_status="not-claimed",
+            decision_effect=(
+                f"types {status} as a baseline-relative statistical interpretation, "
+                "not a causal direction or a reversed physical process"
             ),
         )
     return report
