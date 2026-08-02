@@ -61,6 +61,7 @@ def _parser() -> argparse.ArgumentParser:
     ingest.add_argument("source", type=Path)
     ingest.add_argument("--provider", choices=["ibm", "google"], required=True)
     ingest.add_argument("--max-age-hours", type=float)
+    ingest.add_argument("--observation-pilot", action="store_true")
     ingest.add_argument("-o", "--output", required=True, type=Path)
     bundle = commands.add_parser("bundle")
     bundle.add_argument("source", type=Path)
@@ -70,6 +71,7 @@ def _parser() -> argparse.ArgumentParser:
     receipt = commands.add_parser("receipt")
     receipt.add_argument("bundle", type=Path)
     receipt.add_argument("--result", required=True, type=Path)
+    receipt.add_argument("--observation-pilot", action="store_true")
     receipt.add_argument("-o", "--output", required=True, type=Path)
     assess = commands.add_parser("assess")
     assess.add_argument("receipt", type=Path)
@@ -79,17 +81,20 @@ def _parser() -> argparse.ArgumentParser:
     replicate.add_argument("receipts", nargs="+", type=Path)
     replicate.add_argument("--max-pairwise-tvd", type=float, default=0.1)
     replicate.add_argument("--significance-level", type=float, default=0.05)
+    replicate.add_argument("--observation-pilot", action="store_true")
     replicate.add_argument("-o", "--output", required=True, type=Path)
     drift = commands.add_parser("drift")
     drift.add_argument("baseline", type=Path)
     drift.add_argument("candidate", type=Path)
     drift.add_argument("--max-total-variation", type=float, default=0.1)
     drift.add_argument("--significance-level", type=float, default=0.05)
+    drift.add_argument("--observation-pilot", action="store_true")
     drift.add_argument("-o", "--output", required=True, type=Path)
     trend = commands.add_parser("trend")
     trend.add_argument("campaigns", nargs="+", type=Path)
     trend.add_argument("--max-total-variation", type=float, default=0.1)
     trend.add_argument("--significance-level", type=float, default=0.05)
+    trend.add_argument("--observation-pilot", action="store_true")
     trend.add_argument("-o", "--output", required=True, type=Path)
     artifact = commands.add_parser("validate-artifact")
     artifact.add_argument("source", type=Path)
@@ -122,7 +127,10 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.command == "ingest-calibration":
             result = load_vendor_export(
-                args.source, args.provider, max_age_hours=args.max_age_hours
+                args.source,
+                args.provider,
+                max_age_hours=args.max_age_hours,
+                include_observational_claim_pilot=args.observation_pilot,
             )
             args.output.write_text(
                 json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8"
@@ -143,7 +151,11 @@ def main(argv: list[str] | None = None) -> int:
             bundle_value, bundle_bytes = load_execution_bundle(args.bundle)
             result_value, result_bytes = load_execution_result(args.result)
             receipt = build_execution_receipt(
-                bundle_value, bundle_bytes, result_value, result_bytes
+                bundle_value,
+                bundle_bytes,
+                result_value,
+                result_bytes,
+                include_observational_claim_pilot=args.observation_pilot,
             )
             args.output.write_text(
                 json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8"
@@ -164,6 +176,7 @@ def main(argv: list[str] | None = None) -> int:
                 load_replication_receipts(args.receipts),
                 max_pairwise_tvd=args.max_pairwise_tvd,
                 significance_level=args.significance_level,
+                include_observational_claim_pilot=args.observation_pilot,
             )
             args.output.write_text(
                 json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
@@ -176,6 +189,7 @@ def main(argv: list[str] | None = None) -> int:
                 load_replication_report(args.candidate),
                 max_total_variation=args.max_total_variation,
                 significance_level=args.significance_level,
+                include_observational_claim_pilot=args.observation_pilot,
             )
             args.output.write_text(
                 json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
@@ -187,6 +201,7 @@ def main(argv: list[str] | None = None) -> int:
                 load_trend_reports(args.campaigns),
                 max_total_variation=args.max_total_variation,
                 significance_level=args.significance_level,
+                include_observational_claim_pilot=args.observation_pilot,
             )
             args.output.write_text(
                 json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"

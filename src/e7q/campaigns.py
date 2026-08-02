@@ -9,6 +9,13 @@ from typing import Any, Iterable
 
 from .assessment import _gamma_q
 from .language import E7QError
+from .observations import (
+    interpretation_record,
+    observation_record,
+    observational_claim,
+    observational_claim_pilot,
+    shared_observational_field,
+)
 from .temporal import temporal_evidence
 
 
@@ -32,6 +39,7 @@ def assess_replication(
     *,
     max_pairwise_tvd: float = 0.1,
     significance_level: float = 0.05,
+    include_observational_claim_pilot: bool = False,
 ) -> dict[str, object]:
     """Assess distributional consistency across independently supplied receipts."""
     if len(receipts) < 2:
@@ -73,7 +81,14 @@ def assess_replication(
         if sum(clean.values()) != shots:
             raise E7QError("receipt counts must sum to shots")
         outcomes.update(clean)
-        normalized.append({"index": index, "shots": shots, "counts": clean, "result_digest": digest})
+        normalized.append({
+            "index": index,
+            "shots": shots,
+            "counts": clean,
+            "result_digest": digest,
+            "provider": receipt.get("provider", "unknown"),
+            "completed_at": receipt.get("completed_at"),
+        })
 
     total_shots = sum(run["shots"] for run in normalized)
     pooled_counts = {
@@ -118,7 +133,7 @@ def assess_replication(
         {"step": 2, "kind": "repeatability-assessment", "status": status, "maximum_pairwise_tvd": maximum_tvd, "chi_square": chi_square, "p_value": p_value},
         {"step": 3, "kind": "evidence-boundary", "boundary": "Offline consistency of user-supplied linked receipts only; not provider authentication, independence proof, device correctness, reference truth, quantum advantage, or physical fidelity."},
     ]
-    return {
+    report: dict[str, object] = {
         "schema": "e7q.replication-report/v1",
         "status": status,
         "bundle_digest": bundle,
@@ -138,7 +153,8 @@ def assess_replication(
         "checks": checks,
         "warnings": (["chi-square homogeneity approximation has expected cells below 5: " + ", ".join(low_expected)] if low_expected else []),
         "temporal_evidence": temporal_evidence(
-            carrier="TD2",
+            temporal_order_roles=["TD2"],
+            carrier_ref=bundle,
             carrier_description="family of supplied execution runs",
             order_relation="unordered replication family",
             chronology_status="not-established",
@@ -159,6 +175,12 @@ def assess_replication(
                 "The pooled report does not determine a unique run chronology "
                 "or device trajectory."
             ),
+            criterion_id="e7q.replication-consistency",
+            criterion_edition="1",
+            criterion_parameters={
+                "max_pairwise_tvd": float(max_pairwise_tvd),
+                "significance_level": float(significance_level),
+            },
             criterion=(
                 f"maximum pairwise TVD <= {float(max_pairwise_tvd)} and "
                 f"homogeneity p-value >= {float(significance_level)}"
@@ -175,3 +197,144 @@ def assess_replication(
         ),
         "proof": proof,
     }
+    if include_observational_claim_pilot:
+        records: list[dict[str, object]] = []
+        claims: list[dict[str, object]] = []
+        record_refs: list[str] = []
+        claim_refs: list[str] = []
+        observer_refs: list[str] = []
+        for run in normalized:
+            index = run["index"]
+            record_id = f"observation:execution-receipt:{index}"
+            claim_id = f"claim:reported-run-counts:{index}"
+            observer_ref = (
+                f"reported-observing-system:{run['provider']}:"
+                f"{run['result_digest']}"
+            )
+            limitations = [
+                "provider identity, chronology, and execution were not authenticated",
+                "aggregate counts omit shot order and intermediate states",
+            ]
+            unknowns = [
+                "causal device history",
+                "independence from the other supplied runs",
+                "unrecorded events between runs",
+            ]
+            records.append(
+                observation_record(
+                    observation_id=record_id,
+                    observer_ref=observer_ref,
+                    modelled_entity_ref=str(run["result_digest"]),
+                    inquiry_profile_ref="e7q.replication-consistency",
+                    semantic_context_ref="e7q.execution-receipt/v1",
+                    viewing_or_measurement_ref="normalized aggregate outcome counts",
+                    observation_protocol_ref="e7q.replication-input/v1",
+                    observed_at_or_during=run["completed_at"],
+                    temporal_support={
+                        "reported_completion": run["completed_at"],
+                        "order_status": "not-established",
+                    },
+                    spatial_or_population_support={
+                        "target": target,
+                        "shots": run["shots"],
+                    },
+                    resolution="one aggregate count distribution per supplied run",
+                    recorded_content={
+                        "shots": run["shots"],
+                        "counts": dict(sorted(run["counts"].items())),
+                    },
+                    provenance_refs=[str(run["result_digest"])],
+                    evidence_refs=[bundle, str(run["result_digest"])],
+                    known_limitations=limitations,
+                    unknown_positions=unknowns,
+                )
+            )
+            claims.append(
+                observational_claim(
+                    claim_id=claim_id,
+                    observation_record_refs=[record_id],
+                    asserted_content=(
+                        f"Supplied receipt {index} records {run['shots']} shots "
+                        "with the declared aggregate counts."
+                    ),
+                    evidence_path=[
+                        str(run["result_digest"]),
+                        "receipt count validation",
+                        "replication input normalization",
+                    ],
+                    temporal_support={
+                        "reported_completion": run["completed_at"],
+                        "authenticated": False,
+                    },
+                    resolution="one aggregate count distribution",
+                    known_limitations=limitations,
+                    unknown_positions=unknowns,
+                    blocked_overread=[
+                        "the run was independent of every other supplied run",
+                        "the provider or device history was authenticated",
+                    ],
+                )
+            )
+            record_refs.append(record_id)
+            claim_refs.append(claim_id)
+            if observer_ref not in observer_refs:
+                observer_refs.append(observer_ref)
+        report["observational_claim_pilot"] = observational_claim_pilot(
+            pilot_id="e7q.replication-report",
+            observation_records=records,
+            observational_claims=claims,
+            interpretations=[
+                interpretation_record(
+                    interpretation_id="interpretation:replication-status",
+                    supporting_observation_claim_refs=claim_refs,
+                    assumption_refs=[
+                        "all supplied receipts represent the same bundle and target"
+                    ],
+                    inference_rule_refs=["chi-square homogeneity approximation"],
+                    bridge_refs=["finite counts to empirical distributions"],
+                    external_model_refs=["multinomial finite-sample model"],
+                    criterion_refs=["e7q.replication-consistency@1"],
+                    conclusion=f"{status} under the declared repeatability thresholds.",
+                    inherited_limitations=[
+                        "run provenance, chronology, and independence are not authenticated"
+                    ],
+                    added_limitations=(
+                        ["some expected chi-square cells are below five"]
+                        if low_expected
+                        else []
+                    ),
+                    support_basis="mixed",
+                    support_status="operationally-validated-offline",
+                    admissible_use="compare supplied finite-sample run distributions",
+                    non_admissible_use=(
+                        "proof of run independence, device stability, provider identity, "
+                        "physical fidelity, or future performance"
+                    ),
+                    validity_window="the supplied receipt family only",
+                    stop_or_reopen_condition=(
+                        "reopen if receipts, thresholds, provenance, or independence "
+                        "evidence changes"
+                    ),
+                )
+            ],
+            shared_field=shared_observational_field(
+                participating_observer_refs=observer_refs,
+                participating_observation_record_refs=record_refs,
+                jointly_admissible_claim_refs=claim_refs,
+                divergences=pairwise,
+                unknowns=[
+                    "causal dependence among runs",
+                    "unobserved device history between runs",
+                    "authenticated run chronology",
+                ],
+                semantic_conditions=["common target and bundle digest"],
+                temporal_conditions=["replication family is treated as unordered"],
+                resolution_conditions=["aggregate count distributions only"],
+                provenance_conditions=["unique supplied result digests"],
+                admissibility_conditions=["valid counts summing to declared shots"],
+                independence_conditions=[
+                    "independence is not established by distinct result digests"
+                ],
+            ),
+        )
+    return report

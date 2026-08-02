@@ -40,7 +40,7 @@ def test_bundle_is_reproducible_and_offline():
     assert first["source_digest"].startswith("sha256:")
     assert first["openqasm_digest"].startswith("sha256:")
     assert first["proof"][-1]["kind"] == "handoff-boundary"
-    assert first["temporal_evidence"]["carrier"] == "TD1"
+    assert first["temporal_evidence"]["temporal_order_roles"] == ["TD1"]
     assert first["temporal_evidence"]["chronology_status"] == "proof-order-only"
 
 

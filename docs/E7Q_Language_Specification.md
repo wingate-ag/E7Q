@@ -254,18 +254,21 @@ physical fidelity.
 
 ## 19. Bounded temporal-evidence profile
 
-E7Q implements a bounded quantum-workflow profile of the E7G-T v0.11-UC1
+E7Q implements a bounded quantum-workflow profile of the E7G-T v0.11-UC2
 temporal subkernel. Time is treated as an admitted structure that may be
 extended, ordered, projected, summarized, phase-classified, and checked for
 declared boundary crossings. This profile governs evidence semantics only;
 established quantum mathematics remains normative for execution.
 
-The machine-readable subrecord uses schema `e7q.temporal-evidence/v1` and
+The machine-readable subrecord uses schema `e7q.temporal-evidence/v2` and
 contains:
 
-- `carrier`: an E7G-T temporal order-role such as `TD0`, `TD1`, or `TD2`;
-- `carrier_description`: the concrete artifact or history family being
-  classified;
+- `temporal_order_roles`: one or more E7G-T roles such as `TD0`, `TD1`, or
+  `TD2`;
+- `carrier_ref`, when available: a stable reference to the concrete artifact or
+  history family;
+- `carrier_description`: a human-readable description of that concrete
+  carrier;
 - `order_relation`: the actual ordering supported by the artifact;
 - `chronology_status`: whether chronology is absent, declared, format-validated,
   provider-reported, proof-order-only, or authenticated;
@@ -276,13 +279,14 @@ contains:
   hidden or lost structure;
 - `reconstruction`: whether the richer temporal source is reconstructible from
   the view and the declared limit of that reconstruction;
-- `temporal_phase`: the criterion and resulting inquiry-relative status;
+- `temporal_phase`: criterion identifier, edition, parameters, description,
+  and resulting inquiry-relative status;
 - `boundary_crossing`: whether the declared criterion was crossed and, where
   available, the first supplied index or reason.
 
-The bounded carrier mapping is:
+The bounded order-role mapping is:
 
-| Carrier | E7Q interpretation |
+| Order role | E7Q interpretation |
 | --- | --- |
 | `TD0` | one calibration snapshot, measurement, receipt, or reported event |
 | `TD1` | one ordered execution, compilation, Proof-of-Path, or handoff history |
@@ -291,8 +295,10 @@ The bounded carrier mapping is:
 
 Newly generated calibration, execution-bundle, execution-receipt, replication,
 drift, and trend artifacts include the subrecord. Existing v1 artifacts without
-it remain readable. If `temporal_evidence` is present, structural conformance
-must validate its schema, carrier, declared order, chronology status,
+it remain readable. Structural validation also continues to accept legacy
+`e7q.temporal-evidence/v1` subrecords, where `carrier` contained one TD role.
+If `temporal_evidence` is present, structural conformance must validate its
+schema, order roles, declared order, chronology status,
 projection, reconstruction, and any supplied clock, phase, or
 boundary-crossing fields. A claim of authenticated chronology must include an
 authentication evidence reference.
@@ -310,7 +316,50 @@ branching, a new quantum theory of time, authenticated provider chronology,
 continuous observation, or reconstruction of a unique execution history from
 aggregate counts.
 
-## 20. Offline artifact conformance
+## 20. Optional observational-claim pilot
+
+E7Q implements the informative E7G-T v0.11-UC2 observational-claim module as
+the opt-in schema `e7q.observational-claim-pilot/v1alpha1`. It is not part of
+ordinary E7Q artifact conformance and is never emitted unless explicitly
+requested.
+
+The pilot maintains the support dependency:
+
+```text
+declared viewing and protocol
+  -> observation record
+  -> observational claim
+  -> interpretation
+```
+
+An observation record identifies the observer or observing system, modelled
+entity, inquiry, semantic context, viewing or measurement, protocol, temporal
+and population support, resolution, recorded content, provenance, evidence,
+limitations, and unknown positions. An observational claim states only what
+one or more such records license. An interpretation exposes its assumptions,
+rules, bridges, external models, criteria, inherited and added limitations,
+admissible use, blocked use, validity window, and reopen condition.
+
+Where several records are composed, `shared_field` preserves:
+
+- `jointly_admissible_claim_refs`;
+- `divergences`;
+- `unknowns`;
+- semantic, temporal, resolution, provenance, admissibility, and independence
+  conditions.
+
+The currently piloted workflows are calibration ingestion, execution receipts,
+replication reports, drift reports, and trend reports. Their `PASS`, `FAIL`,
+`DRIFT`, `NO_DRIFT`, `TREND_DETECTED`, and `NO_TREND_DETECTED` statuses are
+interpretations under declared criteria, not direct observations.
+
+The CLI flag `--observation-pilot` invokes the module for those workflows.
+Structural artifact validation checks internal record and claim references when
+the optional block is present. The pilot does not establish provider identity,
+run independence, authenticated chronology, physical fidelity, causation,
+future stability, consensus as truth, or an observer-relative ontology.
+
+## 21. Offline artifact conformance
 
 E7Q registers the stable offline artifact families produced by calibration
 ingestion, execution handoff, result normalization, statistical assessment,

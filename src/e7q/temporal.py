@@ -5,9 +5,10 @@ from __future__ import annotations
 from typing import Any
 
 
-SCHEMA = "e7q.temporal-evidence/v1"
+SCHEMA = "e7q.temporal-evidence/v2"
+LEGACY_SCHEMA = "e7q.temporal-evidence/v1"
 
-_CARRIERS = {f"TD{index}" for index in range(8)}
+_ORDER_ROLES = {f"TD{index}" for index in range(8)}
 _CHRONOLOGY_STATUSES = {
     "not-applicable",
     "not-established",
@@ -27,7 +28,6 @@ _RECONSTRUCTION_STATUSES = {
 
 def temporal_evidence(
     *,
-    carrier: str,
     carrier_description: str,
     order_relation: str,
     chronology_status: str,
@@ -39,14 +39,26 @@ def temporal_evidence(
     reconstruction_limit: str,
     clock: dict[str, object] | None = None,
     validity_window: dict[str, object] | None = None,
+    temporal_order_roles: list[str] | None = None,
+    carrier_ref: str | None = None,
+    carrier: str | None = None,
+    criterion_id: str | None = None,
+    criterion_edition: str | None = None,
+    criterion_parameters: dict[str, object] | None = None,
     criterion: str | None = None,
     phase: str | None = None,
     boundary_crossing: dict[str, object] | None = None,
 ) -> dict[str, object]:
-    """Build a deterministic E7Q temporal-evidence subrecord."""
+    """Build a deterministic E7Q temporal-evidence subrecord.
+
+    ``carrier`` remains as a compatibility alias for one TD0--TD7 order role.
+    It is not emitted as a carrier: E7G-T v0.11 distinguishes temporal
+    carriers from the TD order roles used to describe them.
+    """
+    order_roles = list(temporal_order_roles or ([] if carrier is None else [carrier]))
     value: dict[str, object] = {
         "schema": SCHEMA,
-        "carrier": carrier,
+        "temporal_order_roles": order_roles,
         "carrier_description": carrier_description,
         "order_relation": order_relation,
         "chronology_status": chronology_status,
@@ -61,15 +73,22 @@ def temporal_evidence(
             "limit": reconstruction_limit,
         },
     }
+    if carrier_ref is not None:
+        value["carrier_ref"] = carrier_ref
     if clock is not None:
         value["clock"] = clock
     if validity_window is not None:
         value["validity_window"] = validity_window
-    if criterion is not None or phase is not None:
-        value["temporal_phase"] = {
-            "criterion": criterion,
+    if criterion_id is not None or criterion is not None or phase is not None:
+        temporal_phase: dict[str, object] = {
+            "criterion_id": criterion_id,
+            "criterion_edition": criterion_edition,
+            "parameters": criterion_parameters or {},
             "status": phase,
         }
+        if criterion is not None:
+            temporal_phase["description"] = criterion
+        value["temporal_phase"] = temporal_phase
     if boundary_crossing is not None:
         value["boundary_crossing"] = boundary_crossing
     return value
@@ -86,9 +105,9 @@ def conformance_checks(value: Any) -> list[dict[str, object]]:
 
     projection = value.get("projection")
     reconstruction = value.get("reconstruction")
+    schema = value.get("schema")
     checks = [
-        check("schema", value.get("schema") == SCHEMA),
-        check("carrier", value.get("carrier") in _CARRIERS),
+        check("schema", schema in {SCHEMA, LEGACY_SCHEMA}),
         check(
             "carrier-description",
             isinstance(value.get("carrier_description"), str)
@@ -106,6 +125,27 @@ def conformance_checks(value: Any) -> list[dict[str, object]]:
         check("projection", isinstance(projection, dict)),
         check("reconstruction", isinstance(reconstruction, dict)),
     ]
+    if schema == LEGACY_SCHEMA:
+        checks.append(check("carrier", value.get("carrier") in _ORDER_ROLES))
+    else:
+        order_roles = value.get("temporal_order_roles")
+        checks.append(
+            check(
+                "order-roles",
+                isinstance(order_roles, list)
+                and bool(order_roles)
+                and len(set(order_roles)) == len(order_roles)
+                and all(role in _ORDER_ROLES for role in order_roles),
+            )
+        )
+        carrier_ref = value.get("carrier_ref")
+        if carrier_ref is not None:
+            checks.append(
+                check(
+                    "carrier-ref",
+                    isinstance(carrier_ref, str) and bool(carrier_ref),
+                )
+            )
     if isinstance(projection, dict):
         checks.extend(
             [
@@ -163,19 +203,39 @@ def conformance_checks(value: Any) -> list[dict[str, object]]:
     if temporal_phase is not None:
         checks.append(check("phase", isinstance(temporal_phase, dict)))
         if isinstance(temporal_phase, dict):
-            checks.extend(
-                [
+            if schema == LEGACY_SCHEMA:
+                checks.append(
                     check(
                         "phase-criterion",
                         isinstance(temporal_phase.get("criterion"), str)
                         and bool(temporal_phase["criterion"]),
-                    ),
-                    check(
-                        "phase-status",
-                        isinstance(temporal_phase.get("status"), str)
-                        and bool(temporal_phase["status"]),
-                    ),
-                ]
+                    )
+                )
+            else:
+                checks.extend(
+                    [
+                        check(
+                            "phase-criterion-id",
+                            isinstance(temporal_phase.get("criterion_id"), str)
+                            and bool(temporal_phase["criterion_id"]),
+                        ),
+                        check(
+                            "phase-criterion-edition",
+                            isinstance(temporal_phase.get("criterion_edition"), str)
+                            and bool(temporal_phase["criterion_edition"]),
+                        ),
+                        check(
+                            "phase-parameters",
+                            isinstance(temporal_phase.get("parameters"), dict),
+                        ),
+                    ]
+                )
+            checks.append(
+                check(
+                    "phase-status",
+                    isinstance(temporal_phase.get("status"), str)
+                    and bool(temporal_phase["status"]),
+                )
             )
     crossing = value.get("boundary_crossing")
     if crossing is not None:

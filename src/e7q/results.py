@@ -8,6 +8,12 @@ from pathlib import Path
 from typing import Any
 
 from .language import E7QError
+from .observations import (
+    interpretation_record,
+    observation_record,
+    observational_claim,
+    observational_claim_pilot,
+)
 from .temporal import temporal_evidence
 
 
@@ -51,6 +57,8 @@ def build_execution_receipt(
     bundle_bytes: bytes,
     result: dict[str, Any],
     result_bytes: bytes,
+    *,
+    include_observational_claim_pilot: bool = False,
 ) -> dict[str, object]:
     """Validate supplied evidence and build a deterministic offline receipt."""
     if result["target"] != bundle.get("target"):
@@ -116,7 +124,7 @@ def build_execution_receipt(
             ),
         },
     ]
-    return {
+    receipt: dict[str, object] = {
         "schema": "e7q.execution-receipt/v1",
         "status": "PASS",
         "bundle_digest": actual_bundle_digest,
@@ -127,7 +135,8 @@ def build_execution_receipt(
         "shots": shots,
         "completed_at": result["completed_at"],
         "temporal_evidence": temporal_evidence(
-            carrier="TD0",
+            temporal_order_roles=["TD0"],
+            carrier_ref=actual_bundle_digest,
             carrier_description="one provider-reported execution-result event",
             order_relation="single reported completion point",
             chronology_status="provider-reported-not-authenticated",
@@ -153,6 +162,9 @@ def build_execution_receipt(
                 "value": result["completed_at"],
                 "status": "provider-reported-not-authenticated",
             },
+            criterion_id="e7q.receipt-consistency",
+            criterion_edition="1",
+            criterion_parameters={},
             criterion="bundle linkage and count consistency",
             phase="PASS",
             boundary_crossing={"detected": False},
@@ -161,3 +173,108 @@ def build_execution_receipt(
         "probabilities": probabilities,
         "proof": proof,
     }
+    if include_observational_claim_pilot:
+        record_id = "observation:execution-result"
+        claim_id = "claim:provider-reported-counts"
+        inherited_limitations = [
+            "provider identity and chronology were not authenticated",
+            "aggregate counts omit shot order and intermediate states",
+            "the supplied result does not establish physical fidelity",
+        ]
+        unknown_positions = [
+            "shot-level order and timing",
+            "intermediate quantum and device states",
+            "events outside the supplied result artifact",
+        ]
+        receipt["observational_claim_pilot"] = observational_claim_pilot(
+            pilot_id="e7q.execution-receipt",
+            observation_records=[
+                observation_record(
+                    observation_id=record_id,
+                    observer_ref=f"reported-provider:{result['provider']}",
+                    modelled_entity_ref=f"job:{result['job_id']}",
+                    inquiry_profile_ref="e7q.execution-receipt-consistency",
+                    semantic_context_ref="e7q.execution-result/v1",
+                    viewing_or_measurement_ref="supplied aggregate outcome counts",
+                    observation_protocol_ref="e7q.receipt-normalization/v1",
+                    observed_at_or_during=result["completed_at"],
+                    temporal_support={
+                        "status": "provider-reported-not-authenticated",
+                        "reported_completion": result["completed_at"],
+                    },
+                    spatial_or_population_support={
+                        "target": result["target"],
+                        "job_id": result["job_id"],
+                        "shots": shots,
+                    },
+                    resolution="aggregate binary-outcome counts",
+                    recorded_content={
+                        "provider": result["provider"],
+                        "job_id": result["job_id"],
+                        "counts": dict(sorted(normalized.items())),
+                    },
+                    provenance_refs=[_digest(result_bytes)],
+                    evidence_refs=[actual_bundle_digest, _digest(result_bytes)],
+                    known_limitations=inherited_limitations,
+                    unknown_positions=unknown_positions,
+                )
+            ],
+            observational_claims=[
+                observational_claim(
+                    claim_id=claim_id,
+                    observation_record_refs=[record_id],
+                    asserted_content=(
+                        "The supplied execution-result artifact reports the recorded "
+                        "aggregate counts for the identified provider job."
+                    ),
+                    evidence_path=[
+                        "supplied execution result",
+                        "schema and count validation",
+                        "normalized execution receipt",
+                    ],
+                    temporal_support={
+                        "reported_completion": result["completed_at"],
+                        "authenticated": False,
+                    },
+                    resolution="aggregate binary-outcome counts",
+                    known_limitations=inherited_limitations,
+                    unknown_positions=unknown_positions,
+                    blocked_overread=[
+                        "the provider or completion time was independently authenticated",
+                        "the hardware executed the intended circuit faithfully",
+                        "the counts establish a true underlying device history",
+                    ],
+                )
+            ],
+            interpretations=[
+                interpretation_record(
+                    interpretation_id="interpretation:receipt-pass",
+                    supporting_observation_claim_refs=[claim_id],
+                    assumption_refs=["supplied bundle and result bytes are the review inputs"],
+                    inference_rule_refs=["e7q.receipt-normalization/v1"],
+                    bridge_refs=["bundle digest linkage"],
+                    external_model_refs=[],
+                    criterion_refs=["e7q.receipt-consistency@1"],
+                    conclusion=(
+                        "PASS: the supplied result is internally count-consistent and "
+                        "links to the supplied bundle under the declared checks."
+                    ),
+                    inherited_limitations=inherited_limitations,
+                    added_limitations=[
+                        "PASS is bounded to offline structural and arithmetic checks"
+                    ],
+                    support_basis="mixed",
+                    support_status="operationally-validated-offline",
+                    admissible_use="review bundle linkage and normalized finite-sample counts",
+                    non_admissible_use=(
+                        "provider authentication, hardware certification, model truth, "
+                        "or physical-fidelity claims"
+                    ),
+                    validity_window="the supplied bundle/result pair",
+                    stop_or_reopen_condition=(
+                        "reopen if either artifact, digest, schema, or count total changes"
+                    ),
+                )
+            ],
+        )
+    return receipt

@@ -8,6 +8,12 @@ from pathlib import Path
 from typing import Any
 
 from .language import E7QError
+from .observations import (
+    interpretation_record,
+    observation_record,
+    observational_claim,
+    observational_claim_pilot,
+)
 from .temporal import temporal_evidence
 
 
@@ -89,6 +95,7 @@ def ingest_vendor_export(
     *,
     max_age_hours: float | None = None,
     now: datetime | None = None,
+    include_observational_claim_pilot: bool = False,
 ) -> dict[str, object]:
     """Normalize a supplied vendor export into e7q.calibration/v1."""
     provider = provider.lower()
@@ -127,12 +134,12 @@ def ingest_vendor_export(
         if not isinstance(raw, dict):
             raise E7QError("each vendor target must be an object")
         targets.append(_target(provider, raw))
-    return {
+    snapshot: dict[str, object] = {
         "schema": "e7q.calibration/v1",
         "captured_at": payload["captured_at"],
         "targets": targets,
         "temporal_evidence": temporal_evidence(
-            carrier="TD0",
+            temporal_order_roles=["TD0"],
             carrier_description="one supplied calibration snapshot",
             order_relation="single temporal observation",
             chronology_status="format-validated-not-authenticated",
@@ -159,6 +166,9 @@ def ingest_vendor_export(
                 "status": "format-validated-not-authenticated",
             },
             validity_window=validity_window,
+            criterion_id="e7q.calibration-freshness",
+            criterion_edition="1",
+            criterion_parameters={"maximum_age_hours": max_age_hours},
             criterion="declared calibration freshness policy",
             phase=str(validity_window["status"]),
             boundary_crossing={"detected": False},
@@ -170,6 +180,106 @@ def ingest_vendor_export(
             "network_access": False,
         },
     }
+    if include_observational_claim_pilot:
+        record_id = "observation:vendor-calibration-export"
+        claim_id = "claim:reported-calibration-snapshot"
+        limitations = [
+            "provider identity and capture time were not authenticated",
+            "normalization omits provider-native fields outside the E7Q mapping",
+        ]
+        unknowns = [
+            "device changes before or after the captured snapshot",
+            "unmapped provider-native calibration fields",
+        ]
+        interpretations = []
+        if max_age_hours is not None:
+            interpretations.append(
+                interpretation_record(
+                    interpretation_id="interpretation:calibration-freshness",
+                    supporting_observation_claim_refs=[claim_id],
+                    assumption_refs=["the supplied reference time is suitable for age evaluation"],
+                    inference_rule_refs=["UTC timestamp subtraction"],
+                    bridge_refs=["reported capture time to declared freshness policy"],
+                    external_model_refs=[],
+                    criterion_refs=["e7q.calibration-freshness@1"],
+                    conclusion=(
+                        f"{validity_window['status']} under the declared maximum age policy."
+                    ),
+                    inherited_limitations=limitations,
+                    added_limitations=["freshness is not device-state validity"],
+                    support_basis="mixed",
+                    support_status="operationally-validated-offline",
+                    admissible_use="screen the supplied snapshot by declared maximum age",
+                    non_admissible_use=(
+                        "provider authentication, current device-state certification, "
+                        "or future calibration validity"
+                    ),
+                    validity_window=validity_window,
+                    stop_or_reopen_condition=(
+                        "reopen when the reference time, maximum age, or snapshot changes"
+                    ),
+                )
+            )
+        snapshot["observational_claim_pilot"] = observational_claim_pilot(
+            pilot_id="e7q.calibration-ingestion",
+            observation_records=[
+                observation_record(
+                    observation_id=record_id,
+                    observer_ref=f"reported-provider:{provider}",
+                    modelled_entity_ref=f"calibration-export:{payload['captured_at']}",
+                    inquiry_profile_ref="e7q.calibration-normalization",
+                    semantic_context_ref=_SCHEMAS[provider],
+                    viewing_or_measurement_ref="supplied vendor calibration export",
+                    observation_protocol_ref="e7q.calibration-ingestion/v1",
+                    observed_at_or_during=payload["captured_at"],
+                    temporal_support={
+                        "captured_at": payload["captured_at"],
+                        "status": "format-validated-not-authenticated",
+                    },
+                    spatial_or_population_support={
+                        "provider": provider,
+                        "targets": [target["name"] for target in targets],
+                    },
+                    resolution="mapped target-level calibration snapshot",
+                    recorded_content={
+                        "captured_at": payload["captured_at"],
+                        "targets": targets,
+                    },
+                    provenance_refs=[_SCHEMAS[provider]],
+                    evidence_refs=["user-supplied vendor export"],
+                    known_limitations=limitations,
+                    unknown_positions=unknowns,
+                )
+            ],
+            observational_claims=[
+                observational_claim(
+                    claim_id=claim_id,
+                    observation_record_refs=[record_id],
+                    asserted_content=(
+                        "The supplied vendor export reports the recorded capture time "
+                        "and mapped target calibration values."
+                    ),
+                    evidence_path=[
+                        "user-supplied vendor export",
+                        "provider schema validation",
+                        "E7Q target-field normalization",
+                    ],
+                    temporal_support={
+                        "captured_at": payload["captured_at"],
+                        "authenticated": False,
+                    },
+                    resolution="mapped target-level calibration snapshot",
+                    known_limitations=limitations,
+                    unknown_positions=unknowns,
+                    blocked_overread=[
+                        "the provider authenticated the export or timestamp",
+                        "the snapshot describes the device outside its recorded instant",
+                    ],
+                )
+            ],
+            interpretations=interpretations,
+        )
+    return snapshot
 
 
 def load_vendor_export(
@@ -177,6 +287,7 @@ def load_vendor_export(
     provider: str,
     *,
     max_age_hours: float | None = None,
+    include_observational_claim_pilot: bool = False,
 ) -> dict[str, object]:
     try:
         payload = json.loads(Path(path).read_text(encoding="utf-8"))
@@ -185,5 +296,8 @@ def load_vendor_export(
     if not isinstance(payload, dict):
         raise E7QError("vendor export must be an object")
     return ingest_vendor_export(
-        provider, payload, max_age_hours=max_age_hours
+        provider,
+        payload,
+        max_age_hours=max_age_hours,
+        include_observational_claim_pilot=include_observational_claim_pilot,
     )

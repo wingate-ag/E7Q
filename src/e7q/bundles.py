@@ -86,7 +86,7 @@ def build_execution_bundle(
         "shots": shots,
         "captured_at": snapshot["captured_at"],
         "temporal_evidence": temporal_evidence(
-            carrier="TD1",
+            temporal_order_roles=["TD1"],
             carrier_description="ordered preparation and offline handoff path",
             order_relation="Proof-of-Path step order",
             chronology_status="proof-order-only",
@@ -112,6 +112,9 @@ def build_execution_bundle(
                 "value": snapshot["captured_at"],
                 "status": "declared-not-authenticated",
             },
+            criterion_id="e7q.offline-handoff-readiness",
+            criterion_edition="1",
+            criterion_parameters={},
             criterion="offline handoff readiness",
             phase="READY",
             boundary_crossing={"detected": False},

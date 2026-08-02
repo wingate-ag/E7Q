@@ -23,6 +23,10 @@
 | Temporal reconstruction fibre | Multiple execution histories compatible with the same observed counts or summary |
 | Temporal phase | Equivalence under a declared freshness, repeatability, drift, trend, completion, or ordering criterion |
 | Temporal boundary crossing | Freshness expiry, repeatability failure, drift threshold breach, or first trend breach |
+| Observation record | Observer-indexed supplied result, calibration export, receipt, or report under a declared protocol |
+| Observational claim | Source-bounded statement of what the supplied record reports |
+| Interpretation | `PASS`, `FAIL`, `DRIFT`, or `TREND_DETECTED` under declared rules, bridges, models, and criteria |
+| Shared observational field | Jointly admissible claim references plus preserved divergence and unknowns across runs or campaigns |
 
 Structural order and temporal order are independent. For example, one D2
 document may be a TD0 snapshot, participate in a TD1 version history, or belong
