@@ -4,7 +4,7 @@ from e7q.temporal import conformance_checks, temporal_evidence
 
 def test_temporal_evidence_record_is_structurally_valid():
     value = temporal_evidence(
-        carrier="TD1",
+        temporal_order_roles=["TD1"],
         carrier_description="ordered test path",
         order_relation="declared step order",
         chronology_status="proof-order-only",
@@ -14,15 +14,19 @@ def test_temporal_evidence_record_is_structurally_valid():
         loses=["duration"],
         reconstruction_status="non-unique",
         reconstruction_limit="Several histories can produce the summary.",
+        criterion_id="e7q.test-completion",
+        criterion_edition="1",
+        criterion_parameters={},
         criterion="completion",
         phase="COMPLETE",
         boundary_crossing={"detected": False},
     )
-    assert value["schema"] == "e7q.temporal-evidence/v1"
+    assert value["schema"] == "e7q.temporal-evidence/v2"
+    assert value["temporal_order_roles"] == ["TD1"]
     assert all(check["passed"] for check in conformance_checks(value))
 
 
-def test_temporal_evidence_rejects_unsupported_carrier_and_chronology():
+def test_temporal_evidence_rejects_unsupported_order_role_and_chronology():
     value = temporal_evidence(
         carrier="T9",
         carrier_description="invalid",
@@ -40,13 +44,13 @@ def test_temporal_evidence_rejects_unsupported_carrier_and_chronology():
         for check in conformance_checks(value)
         if not check["passed"]
     }
-    assert "temporal-evidence:carrier" in failed
+    assert "temporal-evidence:order-roles" in failed
     assert "temporal-evidence:chronology-status" in failed
 
 
 def test_authenticated_chronology_requires_evidence_reference():
     value = temporal_evidence(
-        carrier="TD0",
+        temporal_order_roles=["TD0"],
         carrier_description="authenticated event",
         order_relation="single event",
         chronology_status="authenticated",
@@ -63,3 +67,24 @@ def test_authenticated_chronology_requires_evidence_reference():
         if not check["passed"]
     }
     assert "temporal-evidence:chronology-authentication" in failed
+
+
+def test_legacy_v1_temporal_evidence_remains_readable():
+    value = {
+        "schema": "e7q.temporal-evidence/v1",
+        "carrier": "TD0",
+        "carrier_description": "legacy event",
+        "order_relation": "single event",
+        "chronology_status": "not-established",
+        "projection": {
+            "from": "source",
+            "to": "view",
+            "preserves": [],
+            "loses": [],
+        },
+        "reconstruction": {
+            "status": "not-attempted",
+            "limit": "No reconstruction was attempted.",
+        },
+    }
+    assert all(check["passed"] for check in conformance_checks(value))

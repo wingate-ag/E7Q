@@ -74,7 +74,8 @@ when you also need to answer:
 - Produces execution bundles for credentialed handoff.
 - Links returned counts to execution receipts.
 - Assesses distributions, replication, campaign drift, and longitudinal trends.
-- Records temporal carrier, ordering, projection loss, phase criteria, and
+- Records temporal carrier descriptions, TD order roles, ordering, projection
+  loss, phase criteria, and
   boundary crossings in machine-readable evidence.
 - Validates the structure of registered E7Q artifacts.
 
@@ -132,6 +133,22 @@ e7q assess execution-receipt.json \
   -o execution-assessment.json
 ```
 
+### Optional E7G-T UC2 observation pilot
+
+Calibration ingestion, receipts, replication, drift, and trend commands accept
+`--observation-pilot`. The flag adds a versioned experimental block that keeps
+supplied records and bounded observational claims distinct from E7Q's derived
+verdicts, while preserving divergence, unknowns, and temporal limits.
+
+```bash
+e7q replicate receipt-1.json receipt-2.json \
+  --observation-pilot \
+  -o replication-report.json
+```
+
+The module is opt-in because it remains informative in E7G-T v0.11-UC2.
+Ordinary E7Q artifacts remain valid without it.
+
 ## Evidence and validation
 
 E7Q's credential-free core is complete as a v1.0 release candidate.
@@ -158,6 +175,7 @@ only when the registered schema and required top-level evidence are present.
 - [Language specification](docs/E7Q_Language_Specification.md)
 - [E7G-T to E7Q mapping](docs/E7GT_Quantum_Mapping.md)
 - [Temporal-evidence profile](docs/TEMPORAL_EVIDENCE_PROFILE.md)
+- [UC2 observational-claim pilot](docs/OBSERVATIONAL_CLAIM_PILOT.md)
 - [Roadmap](ROADMAP.md)
 - [Offline completion boundary](docs/MILESTONE_18.md)
 - [E7G-T upstream relationship](references/E7GT_UPSTREAM.md)
@@ -169,8 +187,9 @@ and detailed usage of each capability.
 
 E7Q is a downstream implementation of E7G-T's invariant, transformation,
 projection, measurement-accountability, temporal-geometry, and Proof-of-Path
-principles. E7Q v1.0rc2 pins E7G-T v0.11-UC1 and implements a bounded
-temporal-evidence profile for quantum workflows. The canonical E7G-T kernel
+principles. E7Q v1.0rc3 pins E7G-T v0.11-UC2, implements a bounded temporal-
+evidence profile, and offers UC2's informative observation/interpretation
+module as an opt-in pilot for quantum workflows. The canonical E7G-T kernel
 remains a separate upstream project and is not silently modified by E7Q.
 
 ## License

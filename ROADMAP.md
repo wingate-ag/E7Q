@@ -179,3 +179,20 @@
 - [x] structural conformance checks for embedded temporal evidence;
 - [x] explicit boundary against physical-time, chronology-authentication, and
   many-worlds claims.
+
+## v1.0rc3 — E7G-T v0.11-UC2 observational-claim pilot
+
+- [x] immutable upstream pin to E7G-T v0.11-UC2;
+- [x] corrected TD0--TD7 order-role terminology in
+  `e7q.temporal-evidence/v2`;
+- [x] stable criterion identifiers, editions, and parameters for temporal
+  phase records;
+- [x] backward structural validation of `e7q.temporal-evidence/v1`;
+- [x] opt-in `e7q.observational-claim-pilot/v1alpha1` records;
+- [x] record/claim/interpretation separation for calibration, receipts,
+  replication, drift, and trend workflows;
+- [x] shared-field preservation of divergence, unknowns, and independence
+  limits;
+- [x] structural and reference-integrity validation for embedded pilot records;
+- [ ] Pilot G comparison against ordinary review and the UC1 profile across
+  four materially different domains before any normative promotion claim.

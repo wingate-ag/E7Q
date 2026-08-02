@@ -8,6 +8,13 @@ from typing import Any
 
 from .assessment import _gamma_q
 from .language import E7QError
+from .observations import (
+    interpretation_record,
+    observation_record,
+    observational_claim,
+    observational_claim_pilot,
+    shared_observational_field,
+)
 from .temporal import temporal_evidence
 
 
@@ -27,6 +34,7 @@ def assess_drift(
     *,
     max_total_variation: float = 0.1,
     significance_level: float = 0.05,
+    include_observational_claim_pilot: bool = False,
 ) -> dict[str, object]:
     """Compare pooled finite-sample distributions from two supplied campaigns."""
     if not isinstance(max_total_variation, (int, float)) or isinstance(max_total_variation, bool) or not 0 <= max_total_variation <= 1:
@@ -95,7 +103,7 @@ def assess_drift(
         {"step": 2, "kind": "drift-decision", "status": status, "checks": checks},
         {"step": 3, "kind": "evidence-boundary", "boundary": "Offline comparison of supplied pooled campaign counts only; not chronology authentication, causal attribution, provider authentication, device-stability proof, or physical-fidelity evidence."},
     ]
-    return {
+    report: dict[str, object] = {
         "schema": "e7q.drift-report/v1",
         "status": status,
         "drift_detected": drift_detected,
@@ -111,7 +119,7 @@ def assess_drift(
         "checks": checks,
         "warnings": (["chi-square homogeneity approximation has expected cells below 5: " + ", ".join(low_expected)] if low_expected else []),
         "temporal_evidence": temporal_evidence(
-            carrier="TD2",
+            temporal_order_roles=["TD2"],
             carrier_description="declared baseline-candidate campaign pair",
             order_relation="declared baseline before candidate",
             chronology_status="declared-not-authenticated",
@@ -132,6 +140,12 @@ def assess_drift(
                 "The observed shift metrics are compatible with multiple "
                 "intermediate histories and causes."
             ),
+            criterion_id="e7q.drift-threshold",
+            criterion_edition="1",
+            criterion_parameters={
+                "max_total_variation": float(max_total_variation),
+                "significance_level": float(significance_level),
+            },
             criterion=(
                 f"total variation <= {float(max_total_variation)} and "
                 f"homogeneity p-value >= {float(significance_level)}"
@@ -148,3 +162,143 @@ def assess_drift(
         ),
         "proof": proof,
     }
+    if include_observational_claim_pilot:
+        observation_records: list[dict[str, object]] = []
+        observational_claims: list[dict[str, object]] = []
+        for index, (label, source) in enumerate(
+            (("baseline", baseline), ("candidate", candidate))
+        ):
+            record_id = f"observation:{label}-replication-report"
+            claim_id = f"claim:{label}-pooled-counts"
+            source_ref = str(source.get("bundle_digest") or f"{label}:{index}")
+            observer_ref = f"software-process:e7q:{label}-report:{source_ref}"
+            limitations = [
+                "the supplied replication report is itself a derived artifact",
+                "chronology, provider identity, and independence are not authenticated",
+            ]
+            unknowns = [
+                "intermediate campaign and device history",
+                "causes of any distributional difference",
+            ]
+            observation_records.append(
+                observation_record(
+                    observation_id=record_id,
+                    observer_ref=observer_ref,
+                    modelled_entity_ref=source_ref,
+                    inquiry_profile_ref="e7q.drift-threshold",
+                    semantic_context_ref="e7q.replication-report/v1",
+                    viewing_or_measurement_ref="supplied pooled campaign counts",
+                    observation_protocol_ref="e7q.drift-input/v1",
+                    observed_at_or_during={"declared_role": label},
+                    temporal_support={
+                        "role": label,
+                        "order_status": "declared-not-authenticated",
+                    },
+                    spatial_or_population_support={
+                        "target": target,
+                        "shots": source.get("total_shots"),
+                    },
+                    resolution="one pooled campaign distribution",
+                    recorded_content={
+                        "pooled_counts": source.get("pooled_counts"),
+                        "total_shots": source.get("total_shots"),
+                    },
+                    provenance_refs=[source_ref],
+                    evidence_refs=[source_ref],
+                    known_limitations=limitations,
+                    unknown_positions=unknowns,
+                )
+            )
+            observational_claims.append(
+                observational_claim(
+                    claim_id=claim_id,
+                    observation_record_refs=[record_id],
+                    asserted_content=(
+                        f"The supplied {label} replication report contains the "
+                        "recorded pooled counts and shot total."
+                    ),
+                    evidence_path=[source_ref, "drift input validation"],
+                    temporal_support={"declared_role": label, "authenticated": False},
+                    resolution="one pooled campaign distribution",
+                    known_limitations=limitations,
+                    unknown_positions=unknowns,
+                    blocked_overread=[
+                        "the report establishes a complete or authenticated device history"
+                    ],
+                )
+            )
+        report["observational_claim_pilot"] = observational_claim_pilot(
+            pilot_id="e7q.drift-report",
+            observation_records=observation_records,
+            observational_claims=observational_claims,
+            interpretations=[
+                interpretation_record(
+                    interpretation_id="interpretation:drift-status",
+                    supporting_observation_claim_refs=[
+                        "claim:baseline-pooled-counts",
+                        "claim:candidate-pooled-counts",
+                    ],
+                    assumption_refs=[
+                        "baseline and candidate roles reflect the intended comparison"
+                    ],
+                    inference_rule_refs=["chi-square homogeneity approximation"],
+                    bridge_refs=["pooled counts to empirical distributions"],
+                    external_model_refs=["multinomial finite-sample model"],
+                    criterion_refs=["e7q.drift-threshold@1"],
+                    conclusion=f"{status} under the declared drift thresholds.",
+                    inherited_limitations=[
+                        "input reports do not authenticate chronology or causal independence"
+                    ],
+                    added_limitations=(
+                        ["some expected chi-square cells are below five"]
+                        if low_expected
+                        else []
+                    ),
+                    support_basis="mixed",
+                    support_status="operationally-validated-offline",
+                    admissible_use="compare the two supplied pooled distributions",
+                    non_admissible_use=(
+                        "causal attribution, continuous monitoring, future stability, "
+                        "or provider and device authentication"
+                    ),
+                    validity_window="the declared baseline-candidate pair",
+                    stop_or_reopen_condition=(
+                        "reopen if either report, threshold, role, or provenance changes"
+                    ),
+                )
+            ],
+            shared_field=shared_observational_field(
+                participating_observer_refs=[
+                    "software-process:e7q:baseline-report:"
+                    + str(baseline.get("bundle_digest") or "baseline:0"),
+                    "software-process:e7q:candidate-report:"
+                    + str(candidate.get("bundle_digest") or "candidate:1"),
+                ],
+                participating_observation_record_refs=[
+                    "observation:baseline-replication-report",
+                    "observation:candidate-replication-report",
+                ],
+                jointly_admissible_claim_refs=[
+                    "claim:baseline-pooled-counts",
+                    "claim:candidate-pooled-counts",
+                ],
+                divergences=[
+                    {
+                        "total_variation": tvd,
+                        "chi_square": chi_square,
+                        "p_value": p_value,
+                    }
+                ],
+                unknowns=[
+                    "causal explanation for the observed difference",
+                    "unobserved intervals between campaigns",
+                ],
+                semantic_conditions=["common target and outcome width"],
+                temporal_conditions=["declared baseline-before-candidate role only"],
+                resolution_conditions=["pooled campaign distributions"],
+                provenance_conditions=["supplied replication-report artifacts"],
+                admissibility_conditions=["valid pooled counts and shot totals"],
+                independence_conditions=["campaign independence is not established"],
+            ),
+        )
+    return report

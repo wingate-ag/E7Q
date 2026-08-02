@@ -56,6 +56,17 @@ def test_invalid_embedded_temporal_evidence_fails():
     )
 
 
+def test_invalid_embedded_observation_pilot_fails():
+    value = trend()
+    value["observational_claim_pilot"] = {"schema": "unsupported"}
+    result = validate_artifact(value)
+    assert result["status"] == "FAIL"
+    assert any(
+        check["name"] == "observation-pilot:schema" and not check["passed"]
+        for check in result["checks"]
+    )
+
+
 def test_validate_artifact_cli(tmp_path):
     source = tmp_path / "trend.json"
     output = tmp_path / "conformance.json"

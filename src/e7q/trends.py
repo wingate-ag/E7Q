@@ -7,6 +7,13 @@ from typing import Any, Iterable
 
 from .drift import assess_drift, load_replication_report
 from .language import E7QError
+from .observations import (
+    interpretation_record,
+    observation_record,
+    observational_claim,
+    observational_claim_pilot,
+    shared_observational_field,
+)
 from .temporal import temporal_evidence
 
 
@@ -22,6 +29,7 @@ def assess_trend(
     *,
     max_total_variation: float = 0.1,
     significance_level: float = 0.05,
+    include_observational_claim_pilot: bool = False,
 ) -> dict[str, object]:
     """Compare each supplied campaign with the first, controlling repeated tests."""
     if len(reports) < 3:
@@ -63,7 +71,7 @@ def assess_trend(
         {"step": 2, "kind": "trend-decision", "status": status, "first_breach_index": first_breach},
         {"step": 3, "kind": "evidence-boundary", "boundary": "Offline baseline-relative comparison in user-supplied order only; not chronology authentication, continuous monitoring, causal attribution, provider authentication, device-stability proof, or physical-fidelity evidence."},
     ]
-    return {
+    report: dict[str, object] = {
         "schema": "e7q.trend-report/v1",
         "status": status,
         "trend_detected": first_breach is not None,
@@ -77,7 +85,7 @@ def assess_trend(
         "adjusted_significance_level": adjusted,
         "multiplicity_method": "bonferroni",
         "temporal_evidence": temporal_evidence(
-            carrier="TD2",
+            temporal_order_roles=["TD2"],
             carrier_description="ordered family of supplied campaign histories",
             order_relation="user-supplied sequence with baseline-relative comparisons",
             chronology_status="declared-not-authenticated",
@@ -98,6 +106,14 @@ def assess_trend(
                 "The supplied series does not determine unobserved intervals "
                 "or a unique causal history."
             ),
+            criterion_id="e7q.trend-threshold",
+            criterion_edition="1",
+            criterion_parameters={
+                "max_total_variation": float(max_total_variation),
+                "family_significance_level": float(significance_level),
+                "adjusted_significance_level": adjusted,
+                "multiplicity_method": "bonferroni",
+            },
             criterion=(
                 f"baseline-relative TVD <= {float(max_total_variation)} and "
                 f"Bonferroni-adjusted p-value >= {adjusted}"
@@ -110,3 +126,132 @@ def assess_trend(
         ),
         "proof": proof,
     }
+    if include_observational_claim_pilot:
+        records: list[dict[str, object]] = []
+        claims: list[dict[str, object]] = []
+        record_refs: list[str] = []
+        claim_refs: list[str] = []
+        for index, source in enumerate(reports):
+            record_id = f"observation:campaign-report:{index}"
+            claim_id = f"claim:campaign-pooled-counts:{index}"
+            source_ref = str(source.get("bundle_digest") or f"campaign:{index}")
+            observer_ref = f"software-process:e7q:campaign-report:{source_ref}"
+            limitations = [
+                "the supplied campaign report is a derived artifact",
+                "supplied order is not authenticated chronology",
+            ]
+            unknowns = [
+                "unobserved intermediate campaigns",
+                "causes of any distributional changes",
+            ]
+            records.append(
+                observation_record(
+                    observation_id=record_id,
+                    observer_ref=observer_ref,
+                    modelled_entity_ref=source_ref,
+                    inquiry_profile_ref="e7q.trend-threshold",
+                    semantic_context_ref="e7q.replication-report/v1",
+                    viewing_or_measurement_ref="supplied pooled campaign counts",
+                    observation_protocol_ref="e7q.trend-input/v1",
+                    observed_at_or_during={"supplied_index": index},
+                    temporal_support={
+                        "supplied_index": index,
+                        "chronology_status": "declared-not-authenticated",
+                    },
+                    spatial_or_population_support={
+                        "target": baseline.get("target"),
+                        "shots": source.get("total_shots"),
+                    },
+                    resolution="one pooled campaign distribution",
+                    recorded_content={
+                        "pooled_counts": source.get("pooled_counts"),
+                        "total_shots": source.get("total_shots"),
+                    },
+                    provenance_refs=[source_ref],
+                    evidence_refs=[source_ref],
+                    known_limitations=limitations,
+                    unknown_positions=unknowns,
+                )
+            )
+            claims.append(
+                observational_claim(
+                    claim_id=claim_id,
+                    observation_record_refs=[record_id],
+                    asserted_content=(
+                        f"The campaign report supplied at index {index} contains "
+                        "the recorded pooled counts and shot total."
+                    ),
+                    evidence_path=[source_ref, "trend input validation"],
+                    temporal_support={"supplied_index": index, "authenticated": False},
+                    resolution="one pooled campaign distribution",
+                    known_limitations=limitations,
+                    unknown_positions=unknowns,
+                    blocked_overread=[
+                        "the supplied position proves an authenticated date or elapsed interval"
+                    ],
+                )
+            )
+            record_refs.append(record_id)
+            claim_refs.append(claim_id)
+        report["observational_claim_pilot"] = observational_claim_pilot(
+            pilot_id="e7q.trend-report",
+            observation_records=records,
+            observational_claims=claims,
+            interpretations=[
+                interpretation_record(
+                    interpretation_id="interpretation:trend-status",
+                    supporting_observation_claim_refs=claim_refs,
+                    assumption_refs=[
+                        "the supplied sequence is the intended baseline-relative order"
+                    ],
+                    inference_rule_refs=[
+                        "baseline-relative chi-square homogeneity comparisons",
+                        "Bonferroni multiplicity control",
+                    ],
+                    bridge_refs=["pooled counts to empirical distributions"],
+                    external_model_refs=["multinomial finite-sample model"],
+                    criterion_refs=["e7q.trend-threshold@1"],
+                    conclusion=f"{status} under the declared longitudinal thresholds.",
+                    inherited_limitations=[
+                        "campaign chronology and unobserved intervals are not authenticated"
+                    ],
+                    added_limitations=[
+                        "only baseline-relative comparisons in supplied order are evaluated"
+                    ],
+                    support_basis="mixed",
+                    support_status="operationally-validated-offline",
+                    admissible_use=(
+                        "locate a declared threshold breach in the supplied campaign sequence"
+                    ),
+                    non_admissible_use=(
+                        "continuous monitoring, causal attribution, future stability, "
+                        "or provider and device authentication"
+                    ),
+                    validity_window="the supplied ordered campaign family",
+                    stop_or_reopen_condition=(
+                        "reopen if order, reports, thresholds, or multiplicity policy changes"
+                    ),
+                )
+            ],
+            shared_field=shared_observational_field(
+                participating_observer_refs=[
+                    str(record["observer_ref"]) for record in records
+                ],
+                participating_observation_record_refs=record_refs,
+                jointly_admissible_claim_refs=claim_refs,
+                divergences=series,
+                unknowns=[
+                    "unobserved campaigns between supplied positions",
+                    "causal explanation for threshold breaches",
+                    "authenticated elapsed time",
+                ],
+                semantic_conditions=["common target and outcome width"],
+                temporal_conditions=["user-supplied sequence only"],
+                resolution_conditions=["pooled campaign distributions"],
+                provenance_conditions=["supplied replication-report artifacts"],
+                admissibility_conditions=["valid pooled counts and shot totals"],
+                independence_conditions=["campaign independence is not established"],
+            ),
+            temporal_extension_bridges=[],
+        )
+    return report
