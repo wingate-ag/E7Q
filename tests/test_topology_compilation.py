@@ -21,6 +21,9 @@ def test_linear_routing_preserves_unitary_and_reports_overhead():
     assert circuit_unitary(compilation.program) == pytest.approx(circuit_unitary(source))
     result = compilation_result(compilation)
     assert result["status"] == "PASS"
+    assert result["topology"] == [[0, 1], [1, 2]]
+    assert "hardware coupling graph" in result["proof"][0]["boundary"]
+    assert "topological overlay" in result["proof"][0]["boundary"]
     assert result["proof"][1]["physical_path"] == [0, 1, 2]
     assert result["proof"][1]["layout_restored"]
 

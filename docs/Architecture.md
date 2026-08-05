@@ -29,10 +29,17 @@ The observation pilot is an informative E7G-T UC2 experiment. It does not make
 an observer's available records equivalent to reality, turn agreement into
 truth, or upgrade an offline verdict into provider or hardware validation.
 
-The temporal-orientation pilot is an informative E7G-T UC3 experiment. It does
+The temporal-orientation pilot is an informative E7G-T UC3 experiment retained
+by the pinned UC4 kernel. It does
 not equate reverse audit traversal with reversed dynamics or causation, equate
 history-whole membership with simultaneity, or turn evidential relevance
 narrowing into quantum measurement collapse or an ontological claim.
+
+E7Q's hardware routing uses undirected coupling graphs. The legacy API and
+artifact term `topology` names that graph structure only and does not invoke
+the E7G-T UC4 mathematical topological-overlay pilot. In particular, graph
+adjacency and routing paths are not silently treated as topological
+neighbourhoods or topological paths.
 
 ## v0.1 implementation
 

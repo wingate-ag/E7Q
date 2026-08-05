@@ -8,11 +8,11 @@ operational equivalence, Proof-of-Path, and temporal geometry.
 
 E7Q pins the following upstream reference for this release candidate:
 
-- **Version:** E7G-T v0.11-UC3
+- **Version:** E7G-T v0.11-UC4
 - **Title:** *E7G-T Unified Geometry-Thinking Kernel — Extensional–Projective–Phase Geometry of Configurations and Time*
-- **Immutable source:** [kernel at commit `35382f6c38b91e36b180cac7e99a23c18d5558c2`](https://github.com/wingate-ag/E7G-T/blob/35382f6c38b91e36b180cac7e99a23c18d5558c2/E7G-T_Kernel_v0.11_UC3_Unified_Public_Reference_Specification.md)
-- **Git blob:** `0fcc0cbf39bd0123cd32dd7380314fc185758ff9`
-- **Compatibility review:** 2026-08-02
+- **Immutable source:** [kernel at commit `1ff8fb95958b3ada1b25b380ecf5f6cd7b59fad4`](https://github.com/wingate-ag/E7G-T/blob/1ff8fb95958b3ada1b25b380ecf5f6cd7b59fad4/E7G-T_Kernel_v0.11_UC4_Unified_Public_Reference_Specification.md)
+- **Git blob:** `d97225feb8a79b6a90cdf073ec215cdd07992ef7`
+- **Compatibility review:** 2026-08-05
 
 E7Q operationalizes a bounded subset of the upstream temporal architecture:
 temporal carriers, declared order, temporal projection, preservation and loss,
@@ -37,6 +37,23 @@ relevance narrowing as epistemic unless a stronger bridge is supplied.
 The UC3 profile is independent of E7Q's computational-basis measurement update.
 It does not reinterpret quantum state update as observer-relative history
 relevance, retrocausation, time neutrality, or ontological collapse.
+
+UC4 retains the UC3 temporal-orientation module, including Candidate Law T0:
+temporal extension, admitted order, representational orientation, and
+directional meaning are distinct modelling ingredients. E7Q already reflects
+this separation by emitting temporal evidence independently while the
+orientation pilot remains explicitly opt-in; a temporal carrier or ordered
+artifact does not by itself select an orientation.
+
+UC4 additionally introduces an informative topological-overlay pilot. E7Q does
+not invoke that pilot merely by using its established `topology` option or JSON
+field. In those legacy E7Q interfaces, `topology` means an undirected quantum
+hardware coupling graph used for adjacency and SWAP routing. It is not a
+declared mathematical topological space `(X, tau)`, and graph adjacency,
+routing paths, and routing boundaries are not asserted to be topological
+neighbourhoods, topological paths, or topological boundaries. A future E7Q use
+of the UC4 overlay would require an explicit carrier, topology, construction,
+and inquiry-relevant topological claim.
 
 E7Q does not infer quantum physics from that vocabulary. Executable meaning
 comes from established quantum theory: Hilbert spaces, tensor products,

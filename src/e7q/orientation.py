@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Opt-in E7G-T UC3 temporal-orientation pilot records."""
+"""Opt-in E7G-T temporal-orientation pilot records, retained in UC4."""
 from __future__ import annotations
 
 from typing import Any
 
 
 SCHEMA = "e7q.temporal-orientation-pilot/v1alpha1"
-UPSTREAM_MODULE = "E7G-T v0.11-UC3 sections 5.13.1-5.13.6 and 19.8"
+UPSTREAM_MODULE = "E7G-T v0.11-UC4 sections 5.13.1-5.13.6, 13.8, and 19.8"
 
 RELATION_KINDS = {
     "clockPrecedence",
@@ -59,7 +59,7 @@ def temporal_orientation_pilot(
     narrowing_status: str,
     decision_effect: str,
 ) -> dict[str, object]:
-    """Build an explicitly invoked, non-normative UC3 pilot envelope."""
+    """Build an explicitly invoked, non-normative orientation pilot envelope."""
     return {
         "schema": SCHEMA,
         "upstream_module": UPSTREAM_MODULE,
@@ -91,7 +91,7 @@ def temporal_orientation_pilot(
 
 
 def conformance_checks(value: Any) -> list[dict[str, object]]:
-    """Check the UC3 pilot structure and its anti-conflation boundaries."""
+    """Check the orientation pilot structure and its anti-conflation boundaries."""
 
     def check(name: str, passed: bool) -> dict[str, object]:
         return {"name": f"orientation-pilot:{name}", "passed": passed}

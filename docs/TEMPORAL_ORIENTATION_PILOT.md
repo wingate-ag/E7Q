@@ -1,9 +1,9 @@
 # E7Q temporal-orientation pilot
 
-E7Q v1.0rc5 implements E7G-T v0.11-UC3's temporal-orientation,
-observer-locality, and history-relevance module as an opt-in profile. The
-module is informative pending E7G-T Pilot H and does not alter E7Q's quantum
-execution semantics.
+E7Q v1.0.0rc6 implements the temporal-orientation, observer-locality, and
+history-relevance module introduced in E7G-T v0.11-UC3 and retained by the
+pinned v0.11-UC4 kernel. The module is informative pending E7G-T Pilot H and
+does not alter E7Q's quantum execution semantics.
 
 ## Invocation
 
@@ -54,6 +54,12 @@ globalConsistency
 These relations may coincide under a declared model but are never silently
 identified.
 
+UC4 Candidate Law T0 also makes extension-orientation separability explicit.
+E7Q's ordinary temporal-evidence records can therefore exist without this
+pilot: declaring a temporal carrier, extension, or order does not by itself
+select a viewing/reconstruction orientation or assign directional meaning.
+Orientation appears only when this pilot is explicitly invoked.
+
 ## Quantum boundary
 
 Compatible-history relevance narrowing is an evidential reconstruction rule.
@@ -69,7 +75,7 @@ chronology, or a unique physical device history.
 ## E7G-T Pilot H use
 
 The E7Q pilot cases compare ordinary temporal reporting, the existing UC2
-temporal/observational profile, and this UC3 record. Promotion would require
+temporal/observational profile, and this UC3-origin record as retained in UC4. Promotion would require
 evidence that the additional fields prevent material orientation, causation,
 simultaneity, or relevance-collapse conflations without imposing unacceptable
 burden. E7Q therefore exposes the fields experimentally and does not make them
