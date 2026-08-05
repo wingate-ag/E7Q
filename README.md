@@ -68,7 +68,7 @@ when you also need to answer:
 - Compares circuits under explicit equivalence criteria.
 - Supports state-vector and density-matrix reference execution.
 - Represents noise channels and backend capabilities.
-- Compiles against declared topologies with auditable SWAP-routing traces.
+- Compiles against declared hardware coupling graphs with auditable SWAP-routing traces.
 - Exports dependency-free Qiskit, Cirq, and OpenQASM source.
 - Estimates resources and selects targets from offline calibration snapshots.
 - Produces execution bundles for credentialed handoff.
@@ -167,6 +167,19 @@ excluded histories as destroyed or nonexistent. It is opt-in because the UC3
 module remains informative pending Pilot H. It does not alter quantum state
 evolution or identify evidential history narrowing with measurement collapse.
 
+### E7G-T UC4 topology boundary
+
+E7Q v1.0.0rc6 pins E7G-T v0.11-UC4. UC4 adds an informative mathematical
+topological-overlay pilot, but ordinary E7Q routing does not invoke it. The
+existing `--topology` option and `topology` artifact fields are retained for
+backward compatibility and mean a hardware **coupling graph** (`linear`,
+`ring`, or `all-to-all`). Graph adjacency and SWAP-routing paths are not
+silently promoted to topological neighbourhoods or topological paths.
+
+UC4 also makes Candidate Law T0 explicit: temporal extension does not itself
+select temporal orientation. E7Q therefore continues to emit temporal evidence
+independently of the opt-in temporal-orientation pilot.
+
 ## Evidence and validation
 
 E7Q's credential-free core is complete as a v1.0 release candidate.
@@ -206,11 +219,12 @@ and detailed usage of each capability.
 
 E7Q is a downstream implementation of E7G-T's invariant, transformation,
 projection, measurement-accountability, temporal-geometry, and Proof-of-Path
-principles. E7Q v1.0rc5 pins E7G-T v0.11-UC3, implements a bounded temporal-
+principles. E7Q v1.0.0rc6 pins E7G-T v0.11-UC4, implements a bounded temporal-
 evidence profile, and offers UC2's observation/interpretation and UC3's
 temporal-orientation modules as separate opt-in pilots for quantum workflows.
-The canonical E7G-T kernel remains a separate upstream project and is not
-silently modified by E7Q.
+UC4's mathematical topological-overlay pilot is not implicitly activated by
+E7Q's legacy coupling-graph `topology` terminology. The canonical E7G-T kernel
+remains a separate upstream project and is not silently modified by E7Q.
 
 ## License
 

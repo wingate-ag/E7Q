@@ -115,6 +115,10 @@ def _parser() -> argparse.ArgumentParser:
             "--topology",
             choices=["linear", "ring", "all-to-all"],
             default="linear",
+            help=(
+                "hardware coupling-graph layout (legacy option name; not an "
+                "E7G-T UC4 mathematical topology)"
+            ),
         )
         command.add_argument(
             "--native-gates",

@@ -217,3 +217,17 @@
   ontological collapse claims;
 - [ ] Pilot H comparison across materially different settings before any
   normative promotion claim.
+
+## v1.0rc6 — E7G-T v0.11-UC4 alignment
+
+- [x] immutable upstream pin to E7G-T v0.11-UC4;
+- [x] incorporate Candidate Law T0's extension-orientation separation without
+  changing executable quantum semantics;
+- [x] define legacy E7Q `topology` terminology as hardware coupling-graph
+  structure rather than an implicit mathematical topological overlay;
+- [x] preserve existing `--topology`, artifact fields, and routing APIs for
+  backward compatibility;
+- [x] add proof and regression guards against UC4 topology conflation;
+- [x] leave the UC4 topological-overlay pilot uninvoked until an inquiry has a
+  separately declared carrier, topology, construction, and material
+  topological claim.

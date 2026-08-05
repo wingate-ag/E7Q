@@ -32,6 +32,8 @@
 | Reverse representation | Reverse traversal or narration that does not establish reversed dynamics or causation |
 | Typed directional relation | Explicit clock, sequence, dependency, observational, reconstructive, causal, final-constraint, or global-consistency role |
 | Compatible-history relevance | Histories still consistent with supplied evidence under fixed conditions; epistemic and distinct from quantum state update |
+| E7Q `topology` (legacy interface term) | Undirected hardware coupling graph used for adjacency and SWAP routing; not automatically a mathematical topology |
+| UC4 topological overlay `(X, tau)` | Not invoked by ordinary E7Q routing; requires a separately declared carrier, topology construction, and inquiry-relevant topological claim |
 
 Structural order and temporal order are independent. For example, one D2
 document may be a TD0 snapshot, participate in a TD1 version history, or belong
@@ -40,3 +42,10 @@ to a TD2 family of alternative histories.
 This is an engineering correspondence, not an identity claim between E7G-T and
 quantum mechanics. TD0–TD7 are modelling roles, not claims about literal
 physical time dimensions or a new quantum theory of time.
+
+E7Q's pre-existing `topology` API terminology predates the E7G-T UC4
+topological-overlay pilot. In E7Q it names graph connectivity only. Operational
+adjacency is therefore not reported as a topological neighbourhood, a routing
+path is not reported as a topological path, and a routing boundary is not
+reported as a topological boundary unless a future analysis separately invokes
+and satisfies the UC4 module.

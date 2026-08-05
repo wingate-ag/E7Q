@@ -36,6 +36,7 @@ def pilot():
 def test_temporal_orientation_pilot_is_structurally_valid():
     value = pilot()
     assert value["status"] == "informative-pilot"
+    assert value["upstream_module"].startswith("E7G-T v0.11-UC4")
     assert all(check["passed"] for check in conformance_checks(value))
 
 

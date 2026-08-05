@@ -794,7 +794,11 @@ def comparison_result(comparison: Comparison) -> dict[str, object]:
 
 
 def topology_edges(qubits: int, topology: str) -> tuple[tuple[int, int], ...]:
-    """Build a named undirected coupling topology."""
+    """Build a named undirected hardware coupling graph.
+
+    ``topology`` is the legacy E7Q API term for a coupling-graph layout.  It
+    does not invoke the E7G-T UC4 mathematical topological-overlay pilot.
+    """
     if qubits < 1:
         raise E7QError("topology requires at least one qubit")
     if topology == "linear":
@@ -840,7 +844,11 @@ def compile_topology(
     edges: tuple[tuple[int, int], ...],
     native_gates: frozenset[str] = _EXECUTABLE_GATES,
 ) -> Compilation:
-    """Route two-qubit gates onto an undirected coupling graph."""
+    """Route two-qubit gates onto an undirected hardware coupling graph.
+
+    The public function name is retained for compatibility; no mathematical
+    topology in the E7G-T UC4 sense is asserted by this compiler.
+    """
     unknown = native_gates - _EXECUTABLE_GATES
     if unknown:
         raise E7QError(f"unknown native gates: {', '.join(sorted(unknown))}")
@@ -852,7 +860,11 @@ def compile_topology(
         "logical_qubits": program.qubits,
         "coupling_edges": [list(edge) for edge in edges],
         "native_gates": sorted(native_gates),
-        "boundary": "Compilation trace only; no physical execution or fidelity is implied.",
+        "boundary": (
+            "Compilation trace over an undirected hardware coupling graph only; "
+            "no physical execution or fidelity is implied, and no E7G-T UC4 "
+            "mathematical topological overlay is invoked."
+        ),
     }]
     inserted = 0
     for source_step, operation in enumerate(program.operations, start=1):

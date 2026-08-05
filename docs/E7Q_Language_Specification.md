@@ -1,6 +1,6 @@
 # E7Q Language Specification
 
-**Version:** 1.0.0-rc5
+**Version:** 1.0.0-rc6
 **Status:** experimental draft
 **Documentation licence:** CC-BY-SA-4.0
 
@@ -95,8 +95,10 @@ For noisy execution, the report distinguishes `transform`, `channel`, and
 capability profile declares required features and preserves the boundary
 between reference simulation and hardware-specific compilation.
 
-Topology compilation accepts an explicit undirected coupling graph and native
-gate set. A non-adjacent two-qubit operation is routed along a shortest path by
+Topology compilation (the legacy E7Q interface name) accepts an explicit
+undirected hardware coupling graph and native gate set. It does not invoke the
+E7G-T UC4 mathematical topological-overlay pilot. A non-adjacent two-qubit
+operation is routed along a shortest graph path by
 inserting a forward SWAP chain, applying the operation, and reversing the
 chain. Restoring the logical layout preserves later measurement and classical
 control semantics. The compilation report records the physical path, inserted
@@ -120,9 +122,10 @@ references, and reject dynamic programs from unitary comparison.
 It must additionally preserve density-matrix trace under all supported
 channels, expose noise-aware evidence and capability requirements, and reject
 noise on the state-vector backend.
-Topology conformance requires rejection of disconnected coupling graphs and
+Coupling-graph conformance requires rejection of disconnected coupling graphs and
 unsupported native gates, semantics preservation after routing, and an
-auditable compilation trace. It does not imply hardware fidelity.
+auditable compilation trace. It does not imply hardware fidelity, topological
+connectedness, continuity, or any other UC4 topological claim.
 Vendor-adapter conformance requires syntactically valid Python output, complete
 static gate and measurement coverage, Proof-of-Path evidence, and explicit
 rejection of unsupported program features.
@@ -256,8 +259,8 @@ physical fidelity.
 
 ## 19. Bounded temporal-evidence profile
 
-E7Q implements a bounded quantum-workflow profile of the E7G-T v0.11-UC3
-temporal subkernel. Time is treated as an admitted structure that may be
+E7Q implements a bounded quantum-workflow profile of the temporal subkernel
+retained in E7G-T v0.11-UC4. Time is treated as an admitted structure that may be
 extended, ordered, projected, summarized, phase-classified, and checked for
 declared boundary crossings. This profile governs evidence semantics only;
 established quantum mathematics remains normative for execution.
@@ -363,8 +366,9 @@ future stability, consensus as truth, or an observer-relative ontology.
 
 ## 21. Optional temporal-orientation pilot
 
-E7Q implements the informative E7G-T v0.11-UC3 temporal-orientation module as
-the separate opt-in schema `e7q.temporal-orientation-pilot/v1alpha1`. It is not
+E7Q implements the informative temporal-orientation module introduced in
+E7G-T v0.11-UC3 and retained in the pinned v0.11-UC4 kernel as the separate
+opt-in schema `e7q.temporal-orientation-pilot/v1alpha1`. It is not
 emitted unless requested and is not required for ordinary artifact
 conformance.
 
@@ -388,6 +392,11 @@ the current reconstruction under fixed conditions; it is distinct from E7Q's
 computational-basis measurement update and does not establish ontological
 collapse, retrocausation, fundamental time neutrality, supertime, or physical
 realisation of alternative histories.
+
+Consistent with UC4 Candidate Law T0, the existence of a temporal carrier,
+extension, or admitted order does not itself select an orientation or assign
+directional meaning. The orientation profile is therefore independent of and
+strictly opt-in relative to ordinary temporal evidence.
 
 ## 22. Offline artifact conformance
 
