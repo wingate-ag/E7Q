@@ -1,6 +1,6 @@
 # Governance
 
-E7Q is currently a founder-led experimental project. Alexander Gregory Wingate is the project author and initial maintainer.
+E7Q is currently a founder-led experimental project. Oleksandr Razinkov is the project author.
 
 Changes should preserve the boundary between E7G-T modelling semantics and established quantum mathematics; make claims testable and equivalence criteria explicit; preserve provenance from specification to evidence; and avoid presenting analogy as physical proof.
 

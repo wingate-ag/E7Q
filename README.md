@@ -368,7 +368,7 @@ remains a separate upstream project and is not silently modified by E7Q.
 
 ## License
 
-Copyright © 2026 Alexander Gregory Wingate and Oleksandr Razinkov.
+Copyright © 2026 Oleksandr Razinkov.
 
 - Source code: [Apache License 2.0](LICENSE)
 - Specifications, documentation, examples as expressive works, and
